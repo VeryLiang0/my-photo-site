@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">摄影作品集</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+            color: #eee;
+            line-height: 1.6;
+            background: #111;
+            position: relative;
+            min-height: 100vh;
+        }
+        #bg-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        body.gradient-bg #bg-container {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+            background-size: 400% 400%;
+            animation: gradientFlow 15s ease infinite;
+        }
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        header { text-align: center; padding: 3rem 1rem 1rem; position: relative; z-index: 1; }
+        header h1 { font-size: 2.8rem; font-weight: 300; letter-spacing: 4px; min-height: 1.2em; }
+        header p { color: #aaa; font-size: 1.1rem; letter-spacing: 2px; min-height: 1.2em; }
+        nav { text-align: center; margin: 2rem 0; position: relative; z-index: 1; }
+        nav a { color: #ccc; text-decoration: none; margin: 0 1.5rem; font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; }
+        nav a:hover { color: #fff; }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative; z-index: 1;
+        }
+        .gallery img {
+            width: 100%; height: 300px; object-fit: cover;
+            display: block; cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.3s;
+            border-radius: 4px;
+        }
+        .gallery img:hover { transform: scale(1.02); opacity: 0.9; }
+        .empty-gallery-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #666;
+            padding: 4rem 0;
+            font-style: italic;
+        }
+        .about { max-width: 700px; margin: 4rem auto; padding: 0 1.5rem; text-align: center; position: relative; z-index: 1; }
+        .about h2 { font-size: 2rem; font-weight: 300; letter-spacing: 3px; margin-bottom: 1.5rem; }
+        .about p { color: #bbb; margin-bottom: 2rem; min-height: 1.5em; }
+        .contact-links a {
+            display: inline-block; margin: 0 1rem; color: #ccc; text-decoration: none;
+            border-bottom: 1px solid transparent; transition: border-color 0.3s, color 0.3s;
+        }
+        .contact-links a:hover { color: #fff; border-bottom-color: #fff; }
+        footer { text-align: center; padding: 2rem; color: #555; font-size: 0.8rem; position: relative; z-index: 1; }
+        .lightbox {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 1000;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .lightbox img { max-width: 90%; max-height: 85%; border-radius: 4px; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
+        .lightbox .close { position: absolute; top: 20px; right: 30px; font-size: 2.5rem; color: #fff; cursor: pointer; background: none; border: none; }
+        @media (max-width: 600px) {
+            header h1 { font-size: 2rem; }
+            nav a { margin: 0 0.8rem; font-size: 0.8rem; }
+            .gallery img { height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-container"></div>
+
+    <header>
+        <h1 id="site-name">我的摄影空间</h1>
+        <p id="site-subtitle">请先填写简介</p>
+    </header>
+    <nav>
+        <a href="#gallery">作品</a>
+        <a href="#about">关于</a>
+        <a href="#contact">联系</a>
+    </nav>
+    <section class="gallery" id="gallery">
+        <div class="empty-gallery-msg" id="empty-gallery">还没有作品，去后台添加吧。</div>
+    </section>
+    <section class="about" id="about">
+        <h2>ABOUT ME</h2>
+        <p id="about-text">这里将显示你的介绍。</p>
+    </section>
+    <section class="about" id="contact">
+        <h2>CONTACT</h2>
+        <div class="contact-links" id="contact-links">
+            <span style="color:#666;">未设置联系方式</span>
+        </div>
+    </section>
+    <footer><span id="footer-text">© 我的摄影空间</span></footer>
+
+    <div class="lightbox" id="lightbox">
+        <button class="close" onclick="closeLightbox()">&times;</button>
+        <img src="" alt="放大图片" id="lightbox-img">
+    </div>
+
+    <script>
+        let currentBackground = 'static';
+        let particleAnimationId = null;
+        let resizeTimeout = null;
+
+        function clearBackground() {
+            const container = document.getElementById('bg-container');
+            container.innerHTML = '';
+            document.body.classList.remove('gradient-bg');
+            if (particleAnimationId) {
+                cancelAnimationFrame(particleAnimationId);
+                particleAnimationId = null;
+            }
+        }
+
+        function setBackground(type) {
+            clearBackground();
+            currentBackground = type;
+            const container = document.getElementById('bg-container');
+
+            if (type === 'gradient') {
+                document.body.classList.add('gradient-bg');
+            } else if (type === 'particles') {
+                const canvas = document.createElement('canvas');
+                canvas.id = 'particle-canvas';
+                container.appendChild(canvas);
+                initParticles(canvas);
+            }
+        }
+
+        function initParticles(canvas) {
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(resizeCanvas, 150);
+            });
+            resizeCanvas();
+
+            const particleCount = 80;
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    radius: Math.random() * 2 + 1
+                });
+            }
+
+            function draw() {
+                if (!document.getElementById('particle-canvas')) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.lineWidth = 0.5;
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                });
+                particleAnimationId = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                const bg = data.background || 'static';
+                setBackground(bg);
+
+                if (data.siteName) {
+                    document.getElementById('site-name').textContent = data.siteName;
+                    document.title = data.siteName + ' | 摄影师';
+                    document.getElementById('footer-text').textContent = '© ' + new Date().getFullYear() + ' ' + data.siteName;
+                }
+                if (data.subtitle) {
+                    document.getElementById('site-subtitle').textContent = data.subtitle;
+                } else {
+                    document.getElementById('site-subtitle').textContent = '';
+                }
+                if (data.aboutText) {
+                    document.getElementById('about-text').textContent = data.aboutText;
+                }
+                const linksDiv = document.getElementById('contact-links');
+                linksDiv.innerHTML = '';
+                let hasContact = false;
+                if (data.email) {
+                    linksDiv.innerHTML += '<a href="mailto:' + data.email + '">Email</a>';
+                    hasContact = true;
+                }
+                if (data.instagram) {
+                    linksDiv.innerHTML += '<a href="' + data.instagram + '" target="_blank" rel="noopener">Instagram</a>';
+                    hasContact = true;
+                }
+                if (data.xiaohongshu) {
+                    linksDiv.innerHTML += '<a href="' + data.xiaohongshu + '" target="_blank" rel="noopener">小红书</a>';
+                    hasContact = true;
+                }
+                if (!hasContact) {
+                    linksDiv.innerHTML = '<span style="color:#666;">未设置联系方式</span>';
+                }
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = '';
+                if (data.photos && data.photos.length > 0) {
+                    data.photos.forEach(photo => {
+                        const img = document.createElement('img');
+                        img.src = photo.src;
+                        img.alt = photo.alt || '';
+                        img.loading = 'lazy';
+                        img.onclick = () => openLightbox(photo.src);
+                        gallery.appendChild(img);
+                    });
+                } else {
+                    gallery.innerHTML = '<div class="empty-gallery-msg">还没有作品，去后台添加吧。</div>';
+                }
+            })
+            .catch(error => {
+                console.error('加载数据失败:', error);
+                document.getElementById('site-name').textContent = '加载失败，请确认 data.json 存在';
+            });
+
+        function openLightbox(imgSrc) {
+            document.getElementById('lightbox').style.display = 'flex';
+            document.getElementById('lightbox-img').src = imgSrc;
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) closeLightbox();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+</body>
+</html>
