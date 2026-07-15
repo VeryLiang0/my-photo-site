@@ -1,75 +1,289 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>内容管理</title>
-  <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.1.0/dist/decap-cms.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网站后台管理</title>
+  <style>
+    :root { --bg: #1e1e2e; --panel: #2a2a3c; --text: #ccc; --accent: #89b4fa; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #fff; }
+    .section { background: var(--panel); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .section h2 { margin-bottom: 15px; font-size: 1.2rem; color: var(--accent); }
+    label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+    input, textarea, select { width: 100%; padding: 8px; margin-bottom: 15px; background: #1e1e2e; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 1rem; }
+    textarea { resize: vertical; min-height: 80px; }
+    button { padding: 10px 20px; background: var(--accent); color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .photo-item { border: 1px solid #444; border-radius: 4px; padding: 10px; margin-bottom: 10px; }
+    .photo-item img { max-height: 100px; margin-bottom: 5px; border-radius: 4px; }
+    .photo-item input { margin-bottom: 5px; }
+    #status { color: #a6e3a1; margin-top: 20px; text-align: center; }
+    .token-input { margin-bottom: 30px; }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>🖼️ 网站后台管理</h1>
+
+    <!-- Token 登录区域 -->
+    <div id="loginSection" class="section token-input">
+      <h2>输入 GitHub Token</h2>
+      <input type="password" id="tokenInput" placeholder="粘贴你的 GitHub Personal Access Token">
+      <button onclick="saveToken()">保存并登录</button>
+      <p style="font-size:0.85rem;color:#888;">Token 将安全存储在你的浏览器中，不会上传到服务器。</p>
+    </div>
+
+    <!-- 编辑区域（登录后显示） -->
+    <div id="editorSection" class="hidden">
+      <div class="section">
+        <h2>网站信息</h2>
+        <label>摄影师名字</label>
+        <input type="text" id="siteName">
+        <label>副标题</label>
+        <input type="text" id="subtitle">
+        <label>关于我</label>
+        <textarea id="aboutText"></textarea>
+        <label>邮箱</label>
+        <input type="email" id="email">
+        <label>Instagram 链接</label>
+        <input type="text" id="instagram" placeholder="https://instagram.com/...">
+        <label>小红书链接</label>
+        <input type="text" id="xiaohongshu" placeholder="https://...">
+        <label>抖音号</label>
+        <input type="text" id="douyin" placeholder="例如 yansheng7000">
+        <label>网页背景</label>
+        <select id="background">
+          <option value="static">静态深色</option>
+          <option value="gradient">流动渐变</option>
+          <option value="particles">粒子星空</option>
+          <option value="gradient-particles">渐变+粒子</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <h2>作品列表</h2>
+        <div id="photosContainer"></div>
+        <button onclick="addPhoto()">+ 添加新作品</button>
+      </div>
+
+      <button onclick="saveData()">💾 保存所有修改</button>
+      <div id="status"></div>
+    </div>
+  </div>
+
   <script>
-    var interval = setInterval(function() {
-      if (typeof DecapCms !== 'undefined') {
-        clearInterval(interval);
-        DecapCms.init({
-          config: {
-            backend: {
-              name: 'github',
-              repo: 'VeryLiang0/my-photo-site',
-              branch: 'main',
-              base_url: 'https://api.netlify.com'
-            },
-            media_folder: 'images',
-            public_folder: '/images',
-            media_library: { name: 'default' },
-            collections: [
-              {
-                name: 'settings',
-                label: '网站设置',
-                delete: false,
-                files: [
-                  {
-                    file: 'data.json',
-                    label: '网站内容',
-                    name: 'site_data',
-                    fields: [
-                      { label: '摄影师名字', name: 'siteName', widget: 'string' },
-                      { label: '副标题', name: 'subtitle', widget: 'string' },
-                      { label: '关于我', name: 'aboutText', widget: 'text' },
-                      { label: '邮箱', name: 'email', widget: 'string', required: false },
-                      { label: 'Instagram 链接', name: 'instagram', widget: 'string', required: false },
-                      { label: '小红书链接', name: 'xiaohongshu', widget: 'string', required: false },
-                      { label: '抖音号', name: 'douyin', widget: 'string', required: false },
-                      {
-                        label: '网页背景',
-                        name: 'background',
-                        widget: 'select',
-                        options: [
-                          { label: '静态深色', value: 'static' },
-                          { label: '流动渐变', value: 'gradient' },
-                          { label: '粒子星空', value: 'particles' },
-                          { label: '渐变+粒子', value: 'gradient-particles' }
-                        ],
-                        default: 'static'
-                      },
-                      {
-                        label: '作品列表',
-                        name: 'photos',
-                        widget: 'list',
-                        fields: [
-                          { label: '图片', name: 'src', widget: 'image' },
-                          { label: '图片描述', name: 'alt', widget: 'string' }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+    const OWNER = 'VeryLiang0';
+    const REPO = 'my-photo-site';
+    const BRANCH = 'main';
+    const DATA_PATH = 'data.json';
+    const IMAGES_PATH = 'images/';
+
+    let token = '';
+    let currentData = {};
+
+    // ---------- Token 管理 ----------
+    function saveToken() {
+      const t = document.getElementById('tokenInput').value.trim();
+      if (!t) return alert('请输入 Token');
+      token = t;
+      sessionStorage.setItem('gh_token', token);
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('editorSection').classList.remove('hidden');
+      loadData();
+    }
+
+    // 初始化：检查是否已存 token
+    (function () {
+      const stored = sessionStorage.getItem('gh_token');
+      if (stored) {
+        token = stored;
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('editorSection').classList.remove('hidden');
+        loadData();
+      }
+    })();
+
+    // ---------- 加载 data.json ----------
+    async function loadData() {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, {
+          headers: { Authorization: `token ${token}` }
+        });
+        if (!res.ok) throw new Error(`加载失败: ${res.status}`);
+        const file = await res.json();
+        const content = atob(file.content);
+        currentData = JSON.parse(content);
+        fillForm(currentData);
+      } catch (err) {
+        alert('加载数据出错: ' + err.message);
+      }
+    }
+
+    function fillForm(d) {
+      document.getElementById('siteName').value = d.siteName || '';
+      document.getElementById('subtitle').value = d.subtitle || '';
+      document.getElementById('aboutText').value = d.aboutText || '';
+      document.getElementById('email').value = d.email || '';
+      document.getElementById('instagram').value = d.instagram || '';
+      document.getElementById('xiaohongshu').value = d.xiaohongshu || '';
+      document.getElementById('douyin').value = d.douyin || '';
+      document.getElementById('background').value = d.background || 'static';
+      renderPhotos(d.photos || []);
+    }
+
+    // ---------- 作品列表 ----------
+    function renderPhotos(photos) {
+      const container = document.getElementById('photosContainer');
+      container.innerHTML = '';
+      photos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'photo-item';
+        div.innerHTML = `
+          <img src="${p.src}" alt="" onerror="this.style.display='none'">
+          <label>图片文件名/路径</label>
+          <input type="text" class="photo-src" value="${p.src}">
+          <label>描述</label>
+          <input type="text" class="photo-alt" value="${p.alt || ''}">
+          <input type="file" class="photo-file" accept="image/*" data-index="${i}">
+          <button onclick="this.parentElement.remove()">删除</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function addPhoto() {
+      const container = document.getElementById('photosContainer');
+      const div = document.createElement('div');
+      div.className = 'photo-item';
+      div.innerHTML = `
+        <img src="" alt="" style="display:none;">
+        <label>图片文件名/路径</label>
+        <input type="text" class="photo-src" value="" placeholder="如 images/new.jpg">
+        <label>描述</label>
+        <input type="text" class="photo-alt" value="">
+        <input type="file" class="photo-file" accept="image/*">
+        <button onclick="this.parentElement.remove()">删除</button>
+      `;
+      container.appendChild(div);
+    }
+
+    // ---------- 图片上传（Base64 方式） ----------
+    async function uploadImage(file) {
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onload = async () => {
+          const base64Content = reader.result.split(',')[1];
+          const fileName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+          const path = IMAGES_PATH + fileName;
+          try {
+            const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`, {
+              headers: { Authorization: `token ${token}` }
+            });
+            let sha = null;
+            if (getRes.ok) {
+              const existing = await getRes.json();
+              sha = existing.sha;
+            } else if (getRes.status !== 404) {
+              throw new Error(`检查文件失败: ${getRes.status}`);
+            }
+
+            const body = { message: `上传图片 ${fileName}`, content: base64Content, branch: BRANCH };
+            if (sha) body.sha = sha;
+
+            const putRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
+              method: 'PUT',
+              headers: {
+                Authorization: `token ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(body)
+            });
+            if (!putRes.ok) throw new Error(`上传失败: ${putRes.status}`);
+            const data = await putRes.json();
+            resolve(data.content.path);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ---------- 保存所有修改 ----------
+    async function saveData() {
+      const status = document.getElementById('status');
+      status.textContent = '正在保存...';
+      try {
+        // 处理图片上传
+        const fileInputs = document.querySelectorAll('.photo-file');
+        for (const input of fileInputs) {
+          if (input.files.length > 0) {
+            const path = await uploadImage(input.files[0]);
+            const item = input.closest('.photo-item');
+            item.querySelector('.photo-src').value = path;
+            item.querySelector('.photo-file').value = ''; // 清除文件选择
+          }
+        }
+
+        // 收集表单数据
+        const newData = {
+          siteName: document.getElementById('siteName').value.trim(),
+          subtitle: document.getElementById('subtitle').value.trim(),
+          aboutText: document.getElementById('aboutText').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          instagram: document.getElementById('instagram').value.trim(),
+          xiaohongshu: document.getElementById('xiaohongshu').value.trim(),
+          douyin: document.getElementById('douyin').value.trim(),
+          background: document.getElementById('background').value,
+          photos: []
+        };
+
+        const photoItems = document.querySelectorAll('.photo-item');
+        photoItems.forEach(item => {
+          const src = item.querySelector('.photo-src').value.trim();
+          if (src) {
+            newData.photos.push({
+              src: src,
+              alt: item.querySelector('.photo-alt').value.trim()
+            });
           }
         });
+
+        const newJson = JSON.stringify(newData, null, 0); // 紧凑格式
+        const base64Content = btoa(unescape(encodeURIComponent(newJson)));
+
+        // 获取当前文件的 sha
+        const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, {
+          headers: { Authorization: `token ${token}` }
+        });
+        if (!getRes.ok) throw new Error(`获取文件信息失败: ${getRes.status}`);
+        const fileInfo = await getRes.json();
+
+        // 更新 data.json
+        const updateRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: '更新网站内容',
+            content: base64Content,
+            sha: fileInfo.sha,
+            branch: BRANCH
+          })
+        });
+        if (!updateRes.ok) throw new Error(`保存失败: ${updateRes.status}`);
+        status.textContent = '✅ 保存成功！网站将在 1-2 分钟内更新。';
+        currentData = newData;
+      } catch (err) {
+        status.textContent = '❌ 保存出错: ' + err.message;
       }
-    }, 100);
+    }
   </script>
 </body>
 </html>
