@@ -4,62 +4,72 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>内容管理</title>
-  <script src="https://unpkg.com/decap-cms@^3.1.0/dist/decap-cms.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.1.0/dist/decap-cms.js"></script>
 </head>
 <body>
   <script>
-    DecapCms.init({
-      config: {
-        backend: {
-          name: 'git-gateway',
-          branch: 'main',
-        },
-        media_folder: 'images',
-        public_folder: '/images',
-        collections: [
-          {
-            name: 'settings',
-            label: '网站设置',
-            delete: false,
-            files: [
+    var interval = setInterval(function() {
+      if (typeof DecapCms !== 'undefined') {
+        clearInterval(interval);
+        DecapCms.init({
+          config: {
+            backend: {
+              name: 'github',
+              repo: 'VeryLiang0/my-photo-site',
+              branch: 'main',
+              base_url: 'https://api.netlify.com'
+            },
+            media_folder: 'images',
+            public_folder: '/images',
+            media_library: { name: 'default' },
+            collections: [
               {
-                file: 'data.json',
-                label: '网站内容',
-                name: 'site_data',
-                fields: [
-                  { label: '摄影师名字', name: 'siteName', widget: 'string' },
-                  { label: '副标题', name: 'subtitle', widget: 'string' },
-                  { label: '关于我', name: 'aboutText', widget: 'text' },
-                  { label: '邮箱', name: 'email', widget: 'string', required: false },
-                  { label: 'Instagram 链接', name: 'instagram', widget: 'string', required: false },
-                  { label: '小红书链接', name: 'xiaohongshu', widget: 'string', required: false },
+                name: 'settings',
+                label: '网站设置',
+                delete: false,
+                files: [
                   {
-                    label: '网页背景',
-                    name: 'background',
-                    widget: 'select',
-                    options: [
-                      { label: '静态深色', value: 'static' },
-                      { label: '流动渐变', value: 'gradient' },
-                      { label: '粒子星空', value: 'particles' }
-                    ],
-                    default: 'static'
-                  },
-                  {
-                    label: '作品列表',
-                    name: 'photos',
-                    widget: 'list',
+                    file: 'data.json',
+                    label: '网站内容',
+                    name: 'site_data',
                     fields: [
-                      { label: '图片', name: 'src', widget: 'image' },
-                      { label: '图片描述', name: 'alt', widget: 'string' }
+                      { label: '摄影师名字', name: 'siteName', widget: 'string' },
+                      { label: '副标题', name: 'subtitle', widget: 'string' },
+                      { label: '关于我', name: 'aboutText', widget: 'text' },
+                      { label: '邮箱', name: 'email', widget: 'string', required: false },
+                      { label: 'Instagram 链接', name: 'instagram', widget: 'string', required: false },
+                      { label: '小红书链接', name: 'xiaohongshu', widget: 'string', required: false },
+                      { label: '抖音号', name: 'douyin', widget: 'string', required: false },
+                      {
+                        label: '网页背景',
+                        name: 'background',
+                        widget: 'select',
+                        options: [
+                          { label: '静态深色', value: 'static' },
+                          { label: '流动渐变', value: 'gradient' },
+                          { label: '粒子星空', value: 'particles' },
+                          { label: '渐变+粒子', value: 'gradient-particles' }
+                        ],
+                        default: 'static'
+                      },
+                      {
+                        label: '作品列表',
+                        name: 'photos',
+                        widget: 'list',
+                        fields: [
+                          { label: '图片', name: 'src', widget: 'image' },
+                          { label: '图片描述', name: 'alt', widget: 'string' }
+                        ]
+                      }
                     ]
                   }
                 ]
               }
             ]
           }
-        ]
+        });
       }
-    });
+    }, 100);
   </script>
 </body>
 </html>
