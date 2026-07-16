@@ -30,7 +30,7 @@
             100% { background-position: 0% 50%; }
         }
 
-        .wrapper { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+        .wrapper { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
         header { text-align: center; padding: 60px 20px 20px; }
         header h1 { font-size: 3rem; font-weight: 300; letter-spacing: 6px; margin-bottom: 10px; }
         .subtitle { color: #aaa; font-size: 1.2rem; letter-spacing: 3px; margin-bottom: 15px; }
@@ -61,37 +61,29 @@
             text-decoration: none;
         }
 
-        /* ========== 作品网格：完整显示 ========== */
+        /* ========== 作品单列展示 ========== */
         .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-            padding: 40px 0;
-        }
-        .gallery .photo-card {
-            background: #1a1a1a;
-            border-radius: 6px;
-            overflow: hidden;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            transition: transform 0.25s, opacity 0.25s;
-            cursor: pointer;
-        }
-        .gallery .photo-card:hover {
-            transform: scale(1.02);
-            opacity: 0.9;
+            gap: 20px;
+            padding: 40px 0;
         }
         .gallery img {
             width: 100%;
+            max-width: 100%;
             height: auto;
             display: block;
-            object-fit: contain;   /* 完整显示，不裁切 */
-            max-height: 80vh;      /* 防止超长竖图撑破屏幕，可按需调整 */
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            background: #1a1a1a;
         }
-
+        .gallery img:hover {
+            transform: scale(1.01);
+            opacity: 0.9;
+        }
         .empty-msg {
-            grid-column: 1 / -1;
             text-align: center;
             color: #555;
             padding: 60px 0;
@@ -107,7 +99,7 @@
         .lightbox img {
             max-width: 95%;
             max-height: 95%;
-            object-fit: contain;   /* 灯箱里也完整显示 */
+            object-fit: contain;
             border-radius: 4px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
@@ -121,7 +113,7 @@
 
         @media (max-width: 600px) {
             header h1 { font-size: 2.2rem; }
-            .gallery { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+            .wrapper { padding: 0 15px; }
         }
     </style>
 </head>
@@ -152,7 +144,7 @@
     </div>
 
     <script>
-        // 背景管理（保持不变）
+        // 背景管理
         let particleAnimationId = null, resizeTimeout = null;
         function clearBackground() {
             document.body.classList.remove('gradient-bg');
@@ -189,7 +181,7 @@
             draw();
         }
 
-        // 加载数据
+        // 加载数据并渲染单列图片
         fetch('data.json').then(res=>res.json()).then(data=>{
             setBackground(data.background||'static');
             document.getElementById('site-name').textContent = data.siteName||'摄影师';
@@ -198,11 +190,9 @@
             document.getElementById('style-tag').textContent = data.style||'';
             if(!data.style) document.getElementById('style-tag').style.display='none';
 
-            // QQ 纯文本
             const qqEl = document.getElementById('qq-text');
             if(data.qq) qqEl.textContent = 'QQ：' + data.qq;
             else qqEl.textContent = '';
-            // 抖音固定
             document.getElementById('douyin-text').textContent = '抖音：小林花花';
 
             document.getElementById('year').textContent = new Date().getFullYear();
@@ -212,15 +202,12 @@
             gallery.innerHTML = '';
             if(data.photos && data.photos.length){
                 data.photos.forEach(p=>{
-                    const card = document.createElement('div');
-                    card.className = 'photo-card';
                     const img = document.createElement('img');
                     img.src = p.src;
                     img.alt = p.alt||'';
                     img.loading = 'lazy';
                     img.onclick = () => openLightbox(p.src);
-                    card.appendChild(img);
-                    gallery.appendChild(card);
+                    gallery.appendChild(img);
                 });
             } else {
                 gallery.innerHTML = '<div class="empty-msg">暂无作品</div>';
