@@ -66,21 +66,59 @@
         .contact-row { display: flex; justify-content: center; gap: 30px; margin-top: 10px; flex-wrap: wrap; color: #bbb; font-size: 1rem; }
         .contact-item { display: flex; align-items: center; gap: 6px; color: #bbb; text-decoration: none; }
 
-        .gallery { display: flex; flex-direction: column; align-items: center; gap: 30px; padding: 40px 0; }
-        .photo-item { display: flex; flex-direction: column; align-items: center; max-width: 700px; width: 100%; }
-        .photo-item img { width: 100%; height: auto; border-radius: 4px; cursor: pointer; transition: transform 0.2s, opacity 0.2s; background: #1a1a1a; }
-        .photo-item img:hover { transform: scale(1.02); opacity: 0.9; }
-        .photo-caption { margin-top: 8px; font-size: 0.85rem; color: #aaa; text-align: center; line-height: 1.4; word-break: break-word; }
-        .empty-msg { text-align: center; color: #555; padding: 60px 0; font-style: italic; }
+        /* ========= 双列网格 ========= */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;           /* 图片间距 */
+            padding: 40px 0;
+        }
+        .photo-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .photo-item img {
+            width: 100%;
+            height: auto;        /* 保持原比例 */
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            background: #1a1a1a;
+            object-fit: contain; /* 完整显示不裁切 */
+        }
+        .photo-item img:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+        .photo-caption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #aaa;
+            text-align: center;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .empty-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #555;
+            padding: 60px 0;
+            font-style: italic;
+        }
 
+        /* 灯箱 */
         .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
         .lightbox img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 4px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
         .lightbox .close { position: absolute; top: 20px; right: 30px; font-size: 2.5rem; color: #fff; cursor: pointer; background: none; border: none; }
         footer { text-align: center; padding: 30px 0; color: #444; font-size: 0.85rem; position: relative; z-index: 2; }
 
+        /* 手机端自动变回单列 */
         @media (max-width: 600px) {
             header h1 { font-size: 2.2rem; }
-            .photo-item { max-width: 100%; }
+            .gallery {
+                grid-template-columns: 1fr;   /* 单列 */
+            }
         }
     </style>
 </head>
