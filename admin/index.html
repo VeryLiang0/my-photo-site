@@ -29,7 +29,6 @@
   <div class="container">
     <h1>🖼️ 网站后台管理</h1>
 
-    <!-- Token 登录区域 -->
     <div id="loginSection" class="section token-input">
       <h2>输入 GitHub Token</h2>
       <input type="password" id="tokenInput" placeholder="粘贴你的 GitHub Personal Access Token">
@@ -37,24 +36,19 @@
       <p style="font-size:0.85rem;color:#888;">Token 将安全存储在你的浏览器中，不会上传到服务器。</p>
     </div>
 
-    <!-- 编辑区域（登录后显示） -->
     <div id="editorSection" class="hidden">
       <div class="section">
-        <h2>网站信息</h2>
+        <h2>基本信息</h2>
         <label>摄影师名字</label>
         <input type="text" id="siteName">
         <label>副标题</label>
         <input type="text" id="subtitle">
-        <label>关于我</label>
-        <textarea id="aboutText"></textarea>
-        <label>邮箱</label>
-        <input type="email" id="email">
-        <label>Instagram 链接</label>
-        <input type="text" id="instagram" placeholder="https://instagram.com/...">
-        <label>小红书链接</label>
-        <input type="text" id="xiaohongshu" placeholder="https://...">
+        <label>拍摄风格</label>
+        <input type="text" id="style" placeholder="例如：二次元、古风、情绪">
+        <label>QQ账号</label>
+        <input type="text" id="qq" placeholder="例如：123456789">
         <label>抖音号</label>
-        <input type="text" id="douyin" placeholder="例如 yansheng7000">
+        <input type="text" id="douyin" placeholder="例如：yansheng7000">
         <label>网页背景</label>
         <select id="background">
           <option value="static">静态深色</option>
@@ -85,7 +79,6 @@
     let token = '';
     let currentData = {};
 
-    // ---------- Token 管理 ----------
     function saveToken() {
       const t = document.getElementById('tokenInput').value.trim();
       if (!t) return alert('请输入 Token');
@@ -96,7 +89,6 @@
       loadData();
     }
 
-    // 初始化：检查是否已存 token
     (function () {
       const stored = sessionStorage.getItem('gh_token');
       if (stored) {
@@ -107,7 +99,6 @@
       }
     })();
 
-    // ---------- 加载 data.json ----------
     async function loadData() {
       try {
         const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, {
@@ -126,16 +117,13 @@
     function fillForm(d) {
       document.getElementById('siteName').value = d.siteName || '';
       document.getElementById('subtitle').value = d.subtitle || '';
-      document.getElementById('aboutText').value = d.aboutText || '';
-      document.getElementById('email').value = d.email || '';
-      document.getElementById('instagram').value = d.instagram || '';
-      document.getElementById('xiaohongshu').value = d.xiaohongshu || '';
+      document.getElementById('style').value = d.style || '';
+      document.getElementById('qq').value = d.qq || '';
       document.getElementById('douyin').value = d.douyin || '';
       document.getElementById('background').value = d.background || 'static';
       renderPhotos(d.photos || []);
     }
 
-    // ---------- 作品列表 ----------
     function renderPhotos(photos) {
       const container = document.getElementById('photosContainer');
       container.innerHTML = '';
@@ -171,7 +159,6 @@
       container.appendChild(div);
     }
 
-    // ---------- 图片上传（Base64 方式） ----------
     async function uploadImage(file) {
       const reader = new FileReader();
       return new Promise((resolve, reject) => {
@@ -190,10 +177,8 @@
             } else if (getRes.status !== 404) {
               throw new Error(`检查文件失败: ${getRes.status}`);
             }
-
             const body = { message: `上传图片 ${fileName}`, content: base64Content, branch: BRANCH };
             if (sha) body.sha = sha;
-
             const putRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
               method: 'PUT',
               headers: {
@@ -213,30 +198,25 @@
       });
     }
 
-    // ---------- 保存所有修改 ----------
     async function saveData() {
       const status = document.getElementById('status');
       status.textContent = '正在保存...';
       try {
-        // 处理图片上传
         const fileInputs = document.querySelectorAll('.photo-file');
         for (const input of fileInputs) {
           if (input.files.length > 0) {
             const path = await uploadImage(input.files[0]);
             const item = input.closest('.photo-item');
             item.querySelector('.photo-src').value = path;
-            item.querySelector('.photo-file').value = ''; // 清除文件选择
+            item.querySelector('.photo-file').value = '';
           }
         }
 
-        // 收集表单数据
         const newData = {
           siteName: document.getElementById('siteName').value.trim(),
           subtitle: document.getElementById('subtitle').value.trim(),
-          aboutText: document.getElementById('aboutText').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          instagram: document.getElementById('instagram').value.trim(),
-          xiaohongshu: document.getElementById('xiaohongshu').value.trim(),
+          style: document.getElementById('style').value.trim(),
+          qq: document.getElementById('qq').value.trim(),
           douyin: document.getElementById('douyin').value.trim(),
           background: document.getElementById('background').value,
           photos: []
@@ -253,17 +233,15 @@
           }
         });
 
-        const newJson = JSON.stringify(newData, null, 0); // 紧凑格式
+        const newJson = JSON.stringify(newData, null, 0);
         const base64Content = btoa(unescape(encodeURIComponent(newJson)));
 
-        // 获取当前文件的 sha
         const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, {
           headers: { Authorization: `token ${token}` }
         });
         if (!getRes.ok) throw new Error(`获取文件信息失败: ${getRes.status}`);
         const fileInfo = await getRes.json();
 
-        // 更新 data.json
         const updateRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}`, {
           method: 'PUT',
           headers: {
