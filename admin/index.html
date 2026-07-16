@@ -261,7 +261,7 @@
     // ---------- 图片上传与缩略图 ----------
     // ⚠️ 修改缩略图尺寸和质量：改下面两个常量即可
     const THUMB_WIDTH = 700;    // 缩略图最大宽度（像素）
-    const THUMB_QUALITY = 0.95;  // 缩略图质量（0-1，越大越清晰）
+    const THUMB_QUALITY = 0.99;  // 缩略图质量（0-1，越大越清晰）
 
     async function uploadImage(file) {
       const needCompress = file.size > 40 * 1024 * 1024;
