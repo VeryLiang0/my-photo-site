@@ -39,7 +39,6 @@
   <div class="container">
     <h1>🖼️ 网站后台管理</h1>
 
-    <!-- 登录区域 -->
     <div id="loginSection" class="section">
       <h2>输入 GitHub Token</h2>
       <input type="password" id="tokenInput" placeholder="粘贴你的 GitHub Personal Access Token">
@@ -47,20 +46,14 @@
       <p class="hint">Token 仅存储在浏览器中，请确保具有 repo 权限。</p>
     </div>
 
-    <!-- 编辑区域（登录后显示） -->
     <div id="editorSection" class="hidden">
       <div class="section">
         <h2>基本信息</h2>
-        <label>摄影师名字</label>
-        <input type="text" id="siteName">
-        <label>副标题</label>
-        <input type="text" id="subtitle">
-        <label>拍摄风格</label>
-        <input type="text" id="style" placeholder="如：二次元、古风">
-        <label>QQ账号（仅文本展示）</label>
-        <input type="text" id="qq" placeholder="如：123456789">
-        <label>抖音号（前台固定显示“小林花花”）</label>
-        <input type="text" id="douyin" placeholder="yansheng7000" disabled title="前台已固定为“小林花花”">
+        <label>摄影师名字</label><input type="text" id="siteName">
+        <label>副标题</label><input type="text" id="subtitle">
+        <label>拍摄风格</label><input type="text" id="style" placeholder="如：二次元、古风">
+        <label>QQ账号（仅文本展示）</label><input type="text" id="qq" placeholder="如：123456789">
+        <label>抖音号（前台固定显示“小林花花”）</label><input type="text" id="douyin" placeholder="yansheng7000" disabled title="前台已固定为“小林花花”">
         <label>网页背景</label>
         <select id="background">
           <option value="static">静态深色</option>
@@ -75,9 +68,9 @@
         <div id="photosContainer"></div>
         <button onclick="addPhoto()">+ 添加新作品</button>
         <p class="hint">
-          📌 支持 JPG、PNG、WEBP 格式。<br>
-          ⚡ 单张图片 <strong>≤ 40MB</strong> 将原样无损上传，<strong>超过 40MB 将自动压缩为 WebP</strong>（最大宽度 2000px，质量 80%）。<br>
-          ✨ 推荐控制文件大小以提升网页加载速度。
+          📌 支持 JPG、PNG、WEBP。<br>
+          ⚡ 单张 ≤ 40MB 原样上传，>40MB 自动压缩为 WebP。<br>
+          🖼️ 系统将自动生成 400px 宽缩略图，前台瞬间加载。
         </p>
       </div>
 
@@ -151,8 +144,10 @@
         const div = document.createElement('div');
         div.className = 'photo-item';
         div.innerHTML = `
-          <img src="${p.src}" alt="" onerror="this.style.display='none'">
-          <label>图片文件名/路径</label>
+          <img src="${p.thumb || p.src}" alt="" onerror="this.style.display='none'" style="max-height:100px;">
+          <label>缩略图</label>
+          <input type="text" class="photo-thumb" value="${p.thumb || ''}" placeholder="自动生成">
+          <label>原图路径</label>
           <input type="text" class="photo-src" value="${p.src}">
           <label>描述</label>
           <input type="text" class="photo-alt" value="${p.alt || ''}">
@@ -169,7 +164,9 @@
       div.className = 'photo-item';
       div.innerHTML = `
         <img src="" alt="" style="display:none;">
-        <label>图片文件名/路径</label>
+        <label>缩略图</label>
+        <input type="text" class="photo-thumb" value="" placeholder="上传后自动填充">
+        <label>原图路径</label>
         <input type="text" class="photo-src" value="" placeholder="上传后自动填充">
         <label>描述</label>
         <input type="text" class="photo-alt" value="">
@@ -179,26 +176,38 @@
       container.appendChild(div);
     }
 
-    // ---------- 智能压缩 + 上传（新规则：≤40MB 不压缩，>40MB 压缩）----------
+    // ---------- 智能压缩 + 上传（含缩略图生成）----------
     async function uploadImage(file) {
-      // 仅以文件大小判断是否压缩：>40MB 才压缩
       const needCompress = file.size > 40 * 1024 * 1024;
-      
-      let blobToUpload = file;
+      let mainBlob = file;
       let ext = file.name.split('.').pop().toLowerCase();
       
+      // 主图（原图或压缩后）
       if (needCompress) {
-        // 压缩为 WebP，最大尺寸 2000px，质量 0.8
-        blobToUpload = await compressImage(file, 2000, 0.8);
+        mainBlob = await compressImage(file, 2000, 0.8);
         ext = 'webp';
       }
 
-      // 转为 base64
+      // 生成缩略图（400px 宽，WebP，质量 0.6）
+      const thumbBlob = await compressImage(file, 400, 0.6);
+      const thumbExt = 'webp'; // 缩略图统一为 webp
+
+      // 上传主图
+      const mainPath = await uploadBlobToRepo(mainBlob, file.name, ext);
+      // 上传缩略图
+      const thumbPath = await uploadBlobToRepo(thumbBlob, 'thumb_' + file.name, thumbExt);
+
+      return { mainPath, thumbPath };
+    }
+
+    // 辅助函数：上传 Blob 到仓库
+    async function uploadBlobToRepo(blob, originalName, forceExt) {
       const reader = new FileReader();
       return new Promise((resolve, reject) => {
         reader.onload = async () => {
           const base64 = reader.result.split(',')[1];
-          const fileName = Date.now() + '_' + file.name.replace(/\s+/g, '_').replace(/\.[^/.]+$/, '.' + ext);
+          const cleanName = originalName.replace(/\s+/g, '_').replace(/\.[^/.]+$/, '');
+          const fileName = Date.now() + '_' + cleanName + '.' + forceExt;
           const path = IMAGES_PATH + fileName;
 
           try {
@@ -244,11 +253,11 @@
             reject(e);
           }
         };
-        reader.readAsDataURL(blobToUpload);
+        reader.readAsDataURL(blob);
       });
     }
 
-    // 使用 Canvas 压缩图片（限制最大尺寸，质量）
+    // Canvas 压缩函数
     function compressImage(file, maxDimension, quality) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -290,11 +299,18 @@
         for (const input of fileInputs) {
           if (input.files.length > 0) {
             const file = input.files[0];
-            statusEl.textContent = `正在上传图片：${file.name} ...`;
-            const path = await uploadImage(file);
+            statusEl.textContent = `正在上传图片：${file.name}（生成缩略图）...`;
+            const { mainPath, thumbPath } = await uploadImage(file);
             const item = input.closest('.photo-item');
-            item.querySelector('.photo-src').value = path;
-            input.value = '';
+            item.querySelector('.photo-src').value = mainPath;
+            item.querySelector('.photo-thumb').value = thumbPath;
+            // 预览显示缩略图
+            const previewImg = item.querySelector('img');
+            if (previewImg) {
+              previewImg.src = thumbPath;
+              previewImg.style.display = 'block';
+            }
+            input.value = ''; // 清除已选文件
           }
         }
 
@@ -311,9 +327,11 @@
         const photoItems = document.querySelectorAll('.photo-item');
         photoItems.forEach(item => {
           const src = item.querySelector('.photo-src').value.trim();
+          const thumb = item.querySelector('.photo-thumb').value.trim();
           if (src) {
             newData.photos.push({
               src: src,
+              thumb: thumb || src,  // 没有缩略图则回退到原图
               alt: item.querySelector('.photo-alt').value.trim()
             });
           }
@@ -349,7 +367,7 @@
           throw new Error(`保存失败 (${updateRes.status}): ${errData.message}`);
         }
 
-        statusEl.textContent = '✅ 保存成功！网站将在 1-2 分钟内自动更新。';
+        statusEl.textContent = '✅ 保存成功！网站将在 1-2 分钟内更新。';
         statusEl.className = 'status-success';
         currentData = newData;
       } catch (e) {
