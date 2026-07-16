@@ -58,7 +58,7 @@
         <label>副标题</label><input type="text" id="subtitle">
         <label>拍摄风格</label><input type="text" id="style" placeholder="如：二次元、古风">
         <label>QQ账号（仅文本展示）</label><input type="text" id="qq" placeholder="如：123456789">
-        <label>抖音号（前台固定显示“小林花花”）</label><input type="text" id="douyin" placeholder="yansheng7000" disabled title="前台已固定为“小林花花”">
+        <label>抖音号（前台固定显示"小林花花"）</label><input type="text" id="douyin" placeholder="yansheng7000" disabled title="前台已固定为"小林花花"">
 
         <label>网页背景</label>
         <select id="background" onchange="toggleCustomBg()">
@@ -90,7 +90,8 @@
         <p class="hint">
           📌 支持 JPG、PNG、WEBP。<br>
           ⚡ 单张 ≤ 40MB 原样上传，>40MB 自动压缩为 WebP。<br>
-          🖼️ 系统自动生成 600px 宽高清缩略图（质量 0.9），前台瞬间加载。
+          🖼️ 系统自动生成缩略图。<br>
+          <!-- ⚠️ 修改缩略图参数请搜索 "THUMB_WIDTH" 和 "THUMB_QUALITY" -->
         </p>
       </div>
 
@@ -256,6 +257,10 @@
     }
 
     // ---------- 图片上传与缩略图 ----------
+    // ⚠️ 修改缩略图尺寸和质量：改下面两个常量即可
+    const THUMB_WIDTH = 700;    // 缩略图最大宽度（像素）
+    const THUMB_QUALITY = 0.95;  // 缩略图质量（0-1，越大越清晰）
+
     async function uploadImage(file) {
       const needCompress = file.size > 40 * 1024 * 1024;
       let mainBlob = file, ext = file.name.split('.').pop().toLowerCase();
@@ -263,8 +268,8 @@
         mainBlob = await compressImage(file, 2000, 0.8);
         ext = 'webp';
       }
-      // 高清缩略图 600px, 0.9
-      const thumbBlob = await compressImage(file, 600, 0.9);
+      // 生成缩略图（使用上面的常量）
+      const thumbBlob = await compressImage(file, THUMB_WIDTH, THUMB_QUALITY);
       const mainPath = await uploadBlobToRepo(mainBlob, file.name, ext);
       const thumbPath = await uploadBlobToRepo(thumbBlob, 'thumb_' + file.name, 'webp');
       return { mainPath, thumbPath };
