@@ -61,29 +61,41 @@
             text-decoration: none;
         }
 
-        /* 作品列表：单列居中，缩略图显示 */
+        /* 作品容器 */
         .gallery {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 30px;   /* 图片与备注的整体间距 */
             padding: 40px 0;
         }
-        .gallery img {
-            max-width: 100%;
+        .photo-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 600px;  /* 控制最大展示宽度，可按需调整 */
+            width: 100%;
+        }
+        .photo-item img {
+            width: 100%;
             height: auto;
             display: block;
             border-radius: 4px;
             cursor: pointer;
             transition: transform 0.2s, opacity 0.2s;
             background: #1a1a1a;
-            /* 限制最大宽度，防止原图过大（但这里是缩略图，通常较小） */
-            max-width: 600px; /* 可根据喜好调整展示宽度 */
-            width: auto;
         }
-        .gallery img:hover {
+        .photo-item img:hover {
             transform: scale(1.02);
             opacity: 0.9;
+        }
+        .photo-caption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #888;
+            text-align: center;
+            line-height: 1.4;
+            word-break: break-word;
         }
         .empty-msg {
             text-align: center;
@@ -92,7 +104,7 @@
             font-style: italic;
         }
 
-        /* 灯箱显示原图 */
+        /* 灯箱 */
         .lightbox {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.96); z-index: 1000;
@@ -115,7 +127,7 @@
 
         @media (max-width: 600px) {
             header h1 { font-size: 2.2rem; }
-            .gallery img { max-width: 100%; }
+            .photo-item { max-width: 100%; }
         }
     </style>
 </head>
@@ -146,7 +158,7 @@
     </div>
 
     <script>
-        // 背景管理
+        // 背景管理（保持不变）
         let particleAnimationId = null, resizeTimeout = null;
         function clearBackground() {
             document.body.classList.remove('gradient-bg');
@@ -183,7 +195,7 @@
             draw();
         }
 
-        // 加载数据，使用缩略图
+        // 加载数据
         fetch('data.json').then(res=>res.json()).then(data=>{
             setBackground(data.background||'static');
             document.getElementById('site-name').textContent = data.siteName||'摄影师';
@@ -204,17 +216,30 @@
             gallery.innerHTML = '';
             if(data.photos && data.photos.length){
                 data.photos.forEach(p=>{
+                    // 创建容器
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'photo-item';
+
+                    // 图片（缩略图）
                     const img = document.createElement('img');
-                    // 优先使用缩略图，没有则用原图
                     img.src = p.thumb || p.src;
-                    img.alt = p.alt||'';
+                    img.alt = p.alt || '';
                     img.loading = 'lazy';
-                    // 记录原图路径，用于灯箱
                     img.dataset.fullsrc = p.src;
                     img.onclick = function() {
                         openLightbox(this.dataset.fullsrc);
                     };
-                    gallery.appendChild(img);
+                    itemDiv.appendChild(img);
+
+                    // 备注小字
+                    if (p.alt && p.alt.trim() !== '') {
+                        const caption = document.createElement('p');
+                        caption.className = 'photo-caption';
+                        caption.textContent = p.alt;
+                        itemDiv.appendChild(caption);
+                    }
+
+                    gallery.appendChild(itemDiv);
                 });
             } else {
                 gallery.innerHTML = '<div class="empty-msg">暂无作品</div>';
