@@ -32,15 +32,15 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        /* 自定义背景图时的遮罩层 */
+        /* 自定义背景的暗色遮罩 */
         body.custom-bg #bg-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3); /* 可调暗度 */
+            background: rgba(0,0,0,0.3);
             z-index: 0;
             pointer-events: none;
         }
-        /* 粒子 canvas 层级在遮罩之上、内容之下 */
+        /* 粒子 canvas 在遮罩之上、内容之下 */
         #particle-canvas {
             position: fixed;
             top: 0; left: 0;
@@ -67,7 +67,7 @@
         .contact-item { display: flex; align-items: center; gap: 6px; color: #bbb; text-decoration: none; }
 
         .gallery { display: flex; flex-direction: column; align-items: center; gap: 30px; padding: 40px 0; }
-        .photo-item { display: flex; flex-direction: column; align-items: center; max-width: 600px; width: 100%; }
+        .photo-item { display: flex; flex-direction: column; align-items: center; max-width: 700px; width: 100%; }
         .photo-item img { width: 100%; height: auto; border-radius: 4px; cursor: pointer; transition: transform 0.2s, opacity 0.2s; background: #1a1a1a; }
         .photo-item img:hover { transform: scale(1.02); opacity: 0.9; }
         .photo-caption { margin-top: 8px; font-size: 0.85rem; color: #aaa; text-align: center; line-height: 1.4; word-break: break-word; }
