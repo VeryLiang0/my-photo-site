@@ -30,29 +30,10 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* 主内容区 */
-        .wrapper {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        header {
-            text-align: center;
-            padding: 60px 20px 20px;
-        }
-        header h1 {
-            font-size: 3rem;
-            font-weight: 300;
-            letter-spacing: 6px;
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            color: #aaa;
-            font-size: 1.2rem;
-            letter-spacing: 3px;
-            margin-bottom: 15px;
-        }
+        .wrapper { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        header { text-align: center; padding: 60px 20px 20px; }
+        header h1 { font-size: 3rem; font-weight: 300; letter-spacing: 6px; margin-bottom: 10px; }
+        .subtitle { color: #aaa; font-size: 1.2rem; letter-spacing: 3px; margin-bottom: 15px; }
         .style-tag {
             display: inline-block;
             background: rgba(255,255,255,0.1);
@@ -69,6 +50,8 @@
             gap: 30px;
             margin-top: 10px;
             flex-wrap: wrap;
+            color: #bbb;
+            font-size: 1rem;
         }
         .contact-item {
             display: flex;
@@ -76,19 +59,7 @@
             gap: 6px;
             color: #bbb;
             text-decoration: none;
-            font-size: 1rem;
-            transition: color 0.2s;
         }
-        .contact-item:hover {
-            color: #fff;
-        }
-        .contact-item img {
-            width: 20px;
-            height: 20px;
-            opacity: 0.7;
-        }
-
-        /* 作品网格 */
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -96,60 +67,24 @@
             padding: 40px 0;
         }
         .gallery img {
-            width: 100%;
-            height: 280px;
-            object-fit: cover;
-            border-radius: 6px;
-            cursor: pointer;
+            width: 100%; height: 280px; object-fit: cover;
+            border-radius: 6px; cursor: pointer;
             transition: transform 0.25s, opacity 0.25s;
             background: #1a1a1a;
         }
-        .gallery img:hover {
-            transform: scale(1.03);
-            opacity: 0.9;
-        }
+        .gallery img:hover { transform: scale(1.03); opacity: 0.9; }
         .empty-msg {
-            grid-column: 1 / -1;
-            text-align: center;
-            color: #555;
-            padding: 60px 0;
-            font-style: italic;
+            grid-column: 1 / -1; text-align: center;
+            color: #555; padding: 60px 0; font-style: italic;
         }
-
-        /* 灯箱 */
         .lightbox {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.96);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.96); z-index: 1000;
+            justify-content: center; align-items: center; flex-direction: column;
         }
-        .lightbox img {
-            max-width: 90%;
-            max-height: 85%;
-            border-radius: 4px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-        }
-        .lightbox .close {
-            position: absolute;
-            top: 20px; right: 30px;
-            font-size: 2.5rem;
-            color: #fff;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px 0;
-            color: #444;
-            font-size: 0.85rem;
-        }
-
+        .lightbox img { max-width: 90%; max-height: 85%; border-radius: 4px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .lightbox .close { position: absolute; top: 20px; right: 30px; font-size: 2.5rem; color: #fff; cursor: pointer; background: none; border: none; }
+        footer { text-align: center; padding: 30px 0; color: #444; font-size: 0.85rem; }
         @media (max-width: 600px) {
             header h1 { font-size: 2.2rem; }
             .gallery img { height: 220px; }
@@ -165,12 +100,8 @@
             <div class="subtitle" id="subtitle"></div>
             <div class="style-tag" id="style-tag"></div>
             <div class="contact-row">
-                <a class="contact-item" id="qq-link" target="_blank" rel="noopener">
-                    <span>QQ</span>
-                </a>
-                <a class="contact-item" id="douyin-link" target="_blank" rel="noopener">
-                    <span>抖音</span>
-                </a>
+                <span class="contact-item" id="qq-text">QQ：---</span>
+                <span class="contact-item" id="douyin-text">抖音：小林花花</span>
             </div>
         </header>
 
@@ -187,161 +118,80 @@
     </div>
 
     <script>
-        // 背景管理
+        // 背景管理（保持不变）
         let particleAnimationId = null, resizeTimeout = null;
-
         function clearBackground() {
             document.body.classList.remove('gradient-bg');
-            const container = document.getElementById('bg-container');
-            container.innerHTML = '';
-            if (particleAnimationId) {
-                cancelAnimationFrame(particleAnimationId);
-                particleAnimationId = null;
-            }
+            document.getElementById('bg-container').innerHTML = '';
+            if (particleAnimationId) { cancelAnimationFrame(particleAnimationId); particleAnimationId = null; }
         }
-
         function setBackground(type) {
             clearBackground();
             const container = document.getElementById('bg-container');
-
-            if (type === 'gradient') {
-                document.body.classList.add('gradient-bg');
-            } else if (type === 'particles') {
-                const canvas = document.createElement('canvas');
-                container.appendChild(canvas);
-                initParticles(canvas);
-            } else if (type === 'gradient-particles') {
-                document.body.classList.add('gradient-bg');
-                const canvas = document.createElement('canvas');
-                container.appendChild(canvas);
-                initParticles(canvas);
-            }
+            if (type === 'gradient') document.body.classList.add('gradient-bg');
+            else if (type === 'particles') { const c = document.createElement('canvas'); container.appendChild(c); initParticles(c); }
+            else if (type === 'gradient-particles') { document.body.classList.add('gradient-bg'); const c = document.createElement('canvas'); container.appendChild(c); initParticles(c); }
         }
-
         function initParticles(canvas) {
             const ctx = canvas.getContext('2d');
             let particles = [];
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(resize, 150);
-            });
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(resize, 150); });
             resize();
-            for (let i = 0; i < 70; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.4,
-                    vy: (Math.random() - 0.5) * 0.4,
-                    r: Math.random() * 2 + 1
-                });
-            }
+            for (let i=0;i<70;i++) particles.push({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.4, r:Math.random()*2+1 });
             function draw() {
-                if (!document.getElementById('bg-container').contains(canvas)) return;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                particles.forEach(p => {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-                    ctx.fill();
-                });
-                ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-                ctx.lineWidth = 0.5;
-                for (let i = 0; i < particles.length; i++) {
-                    for (let j = i+1; j < particles.length; j++) {
-                        const dx = particles[i].x - particles[j].x;
-                        const dy = particles[i].y - particles[j].y;
-                        if (Math.sqrt(dx*dx+dy*dy) < 100) {
-                            ctx.beginPath();
-                            ctx.moveTo(particles[i].x, particles[i].y);
-                            ctx.lineTo(particles[j].x, particles[j].y);
-                            ctx.stroke();
-                        }
-                    }
+                if(!document.getElementById('bg-container').contains(canvas)) return;
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle='rgba(255,255,255,0.7)';
+                particles.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); });
+                ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=0.5;
+                for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++){
+                    const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+                    if(Math.sqrt(dx*dx+dy*dy)<100){ ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.stroke(); }
                 }
-                particles.forEach(p => {
-                    p.x += p.vx; p.y += p.vy;
-                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                });
-                particleAnimationId = requestAnimationFrame(draw);
+                particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>canvas.width)p.vx*=-1; if(p.y<0||p.y>canvas.height)p.vy*=-1; });
+                particleAnimationId=requestAnimationFrame(draw);
             }
             draw();
         }
 
         // 加载数据
-        fetch('data.json')
-            .then(res => res.json())
-            .then(data => {
-                // 背景
-                setBackground(data.background || 'static');
+        fetch('data.json').then(res=>res.json()).then(data=>{
+            setBackground(data.background||'static');
+            document.getElementById('site-name').textContent = data.siteName||'摄影师';
+            document.title = (data.siteName||'摄影师') + ' - 摄影作品集';
+            document.getElementById('subtitle').textContent = data.subtitle||'';
+            document.getElementById('style-tag').textContent = data.style||'';
+            if(!data.style) document.getElementById('style-tag').style.display='none';
+            
+            // QQ 纯文本展示
+            const qqEl = document.getElementById('qq-text');
+            if(data.qq) qqEl.textContent = 'QQ：' + data.qq;
+            else qqEl.textContent = '';
+            // 抖音固定展示“小林花花”
+            const dyEl = document.getElementById('douyin-text');
+            dyEl.textContent = '抖音：小林花花';
+            
+            document.getElementById('year').textContent = new Date().getFullYear();
+            document.getElementById('footer-name').textContent = data.siteName||'摄影师';
+            
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            if(data.photos && data.photos.length){
+                data.photos.forEach(p=>{
+                    const img = document.createElement('img');
+                    img.src = p.src; img.alt = p.alt||'';
+                    img.loading='lazy';
+                    img.onclick = ()=>openLightbox(p.src);
+                    gallery.appendChild(img);
+                });
+            } else gallery.innerHTML = '<div class="empty-msg">暂无作品</div>';
+        }).catch(err=>console.error('加载失败:',err));
 
-                // 名字、副标题、风格
-                document.getElementById('site-name').textContent = data.siteName || '摄影师';
-                document.title = (data.siteName || '摄影师') + ' - 摄影作品集';
-                document.getElementById('subtitle').textContent = data.subtitle || '';
-                document.getElementById('style-tag').textContent = data.style || '';
-                if (!data.style) document.getElementById('style-tag').style.display = 'none';
-
-                // QQ 链接
-                const qqLink = document.getElementById('qq-link');
-                if (data.qq) {
-                    qqLink.href = 'https://wpa.qq.com/msgrd?v=3&uin=' + data.qq + '&site=qq&menu=yes';
-                    qqLink.style.display = 'flex';
-                } else {
-                    qqLink.style.display = 'none';
-                }
-
-                // 抖音链接
-                const dyLink = document.getElementById('douyin-link');
-                if (data.douyin) {
-                    dyLink.href = 'https://www.douyin.com/user/' + data.douyin;
-                    dyLink.style.display = 'flex';
-                } else {
-                    dyLink.style.display = 'none';
-                }
-
-                // 页脚年份与名字
-                document.getElementById('year').textContent = new Date().getFullYear();
-                document.getElementById('footer-name').textContent = data.siteName || '摄影师';
-
-                // 作品展示
-                const gallery = document.getElementById('gallery');
-                gallery.innerHTML = '';
-                if (data.photos && data.photos.length) {
-                    data.photos.forEach(p => {
-                        const img = document.createElement('img');
-                        img.src = p.src;
-                        img.alt = p.alt || '';
-                        img.loading = 'lazy';
-                        img.onclick = () => openLightbox(p.src);
-                        gallery.appendChild(img);
-                    });
-                } else {
-                    gallery.innerHTML = '<div class="empty-msg">暂无作品</div>';
-                }
-            })
-            .catch(err => {
-                console.error('加载失败:', err);
-            });
-
-        // 灯箱
-        function openLightbox(src) {
-            document.getElementById('lightbox').style.display = 'flex';
-            document.getElementById('lightbox-img').src = src;
-        }
-        function closeLightbox() {
-            document.getElementById('lightbox').style.display = 'none';
-        }
-        document.getElementById('lightbox').addEventListener('click', e => {
-            if (e.target === e.currentTarget) closeLightbox();
-        });
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeLightbox();
-        });
+        function openLightbox(src){ document.getElementById('lightbox').style.display='flex'; document.getElementById('lightbox-img').src=src; }
+        function closeLightbox(){ document.getElementById('lightbox').style.display='none'; }
+        document.getElementById('lightbox').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeLightbox(); });
+        document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeLightbox(); });
     </script>
 </body>
 </html>
