@@ -58,7 +58,8 @@
         <label>副标题</label><input type="text" id="subtitle">
         <label>拍摄风格</label><input type="text" id="style" placeholder="如：二次元、古风">
         <label>QQ账号（仅文本展示）</label><input type="text" id="qq" placeholder="如：123456789">
-        <label>抖音号（前台固定显示"小林花花"）</label><input type="text" id="douyin" placeholder="yansheng7000" disabled title="前台已固定为"小林花花"">
+        <!-- 修复 title 属性引号 -->
+        <label>抖音号（前台固定显示“小林花花”）</label><input type="text" id="douyin" placeholder="yansheng7000" disabled title='前台已固定为“小林花花”'>
 
         <label>网页背景</label>
         <select id="background" onchange="toggleCustomBg()">
@@ -87,11 +88,12 @@
         <h2>作品列表</h2>
         <div id="photosContainer"></div>
         <button onclick="addPhoto()">+ 添加新作品</button>
+        <!-- ✅ 可见的缩略图参数提醒 -->
         <p class="hint">
           📌 支持 JPG、PNG、WEBP。<br>
           ⚡ 单张 ≤ 40MB 原样上传，>40MB 自动压缩为 WebP。<br>
-          🖼️ 系统自动生成缩略图。<br>
-          <!-- ⚠️ 修改缩略图参数请搜索 "THUMB_WIDTH" 和 "THUMB_QUALITY" -->
+          🖼️ 系统自动生成缩略图：<strong>宽 600px，质量 0.9</strong>。<br>
+          🔧 需要修改参数？打开代码搜索 <code>THUMB_WIDTH</code> 和 <code>THUMB_QUALITY</code> 即可。
         </p>
       </div>
 
