@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>网站后台管理</title>
   <style>
-    :root { --bg: #1e1e2e; --panel: #2a2a3c; --text: #ccc; --accent: #89b4fa; }
+    :root { --bg: #1e1e2e; --panel: #2a2a3c; --text: #ccc; --accent: #89b4fa; --danger: #f38ba8; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
     .container { max-width: 800px; margin: 0 auto; }
@@ -13,36 +13,54 @@
     .section { background: var(--panel); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
     .section h2 { margin-bottom: 15px; font-size: 1.2rem; color: var(--accent); }
     label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
-    input, textarea, select { width: 100%; padding: 8px; margin-bottom: 15px; background: #1e1e2e; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 1rem; }
+    input, textarea, select {
+      width: 100%; padding: 8px; margin-bottom: 15px;
+      background: #1e1e2e; border: 1px solid #444; color: #fff;
+      border-radius: 4px; font-size: 1rem;
+    }
     textarea { resize: vertical; min-height: 80px; }
-    button { padding: 10px 20px; background: var(--accent); color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px; }
-    button:disabled { opacity: 0.5; }
+    button {
+      padding: 10px 20px; background: var(--accent); color: #000;
+      border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
     .photo-item { border: 1px solid #444; border-radius: 4px; padding: 10px; margin-bottom: 10px; }
     .photo-item img { max-height: 100px; margin-bottom: 5px; border-radius: 4px; }
     .photo-item input { margin-bottom: 5px; }
-    #status { color: #a6e3a1; margin-top: 20px; text-align: center; font-weight: bold; }
-    .error { color: #f38ba8; }
+    #status { margin-top: 20px; text-align: center; font-weight: bold; }
+    .status-info { color: #89b4fa; }
+    .status-success { color: #a6e3a1; }
+    .status-error { color: #f38ba8; }
+    .hint { font-size: 0.8rem; color: #888; margin-top: -10px; margin-bottom: 10px; }
     .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🖼️ 网站后台管理</h1>
+
+    <!-- 登录区域 -->
     <div id="loginSection" class="section">
       <h2>输入 GitHub Token</h2>
-      <input type="password" id="tokenInput" placeholder="粘贴 Token">
+      <input type="password" id="tokenInput" placeholder="粘贴你的 GitHub Personal Access Token">
       <button onclick="saveToken()">保存并登录</button>
-      <p style="font-size:0.85rem;color:#888;">Token 仅存储在浏览器中，请确保具有 repo 权限。</p>
+      <p class="hint">Token 仅存储在浏览器中，请确保具有 repo 权限。</p>
     </div>
 
+    <!-- 编辑区域（登录后显示） -->
     <div id="editorSection" class="hidden">
       <div class="section">
         <h2>基本信息</h2>
-        <label>摄影师名字</label><input type="text" id="siteName">
-        <label>副标题</label><input type="text" id="subtitle">
-        <label>拍摄风格</label><input type="text" id="style" placeholder="如：二次元、古风">
-        <label>QQ账号（仅文本展示）</label><input type="text" id="qq" placeholder="如：123456789">
-        <label>抖音号（前台固定显示“小林花花”）</label><input type="text" id="douyin" placeholder="如：yansheng7000" disabled title="前台已固定显示“小林花花”">
+        <label>摄影师名字</label>
+        <input type="text" id="siteName">
+        <label>副标题</label>
+        <input type="text" id="subtitle">
+        <label>拍摄风格</label>
+        <input type="text" id="style" placeholder="如：二次元、古风">
+        <label>QQ账号（仅文本展示）</label>
+        <input type="text" id="qq" placeholder="如：123456789">
+        <label>抖音号（前台固定显示“小林花花”）</label>
+        <input type="text" id="douyin" placeholder="yansheng7000" disabled title="前台已固定为“小林花花”">
         <label>网页背景</label>
         <select id="background">
           <option value="static">静态深色</option>
@@ -56,7 +74,11 @@
         <h2>作品列表</h2>
         <div id="photosContainer"></div>
         <button onclick="addPhoto()">+ 添加新作品</button>
-        <p style="font-size:0.8rem;color:#888;">支持 JPG、PNG、WEBP 等格式，单张建议小于 5MB。</p>
+        <p class="hint">
+          📌 支持 JPG、PNG、WEBP 格式。<br>
+          ⚡ 单张图片 <strong>≤ 40MB</strong> 将原样无损上传，<strong>超过 40MB 将自动压缩为 WebP</strong>（最大宽度 2000px，质量 80%）。<br>
+          ✨ 推荐控制文件大小以提升网页加载速度。
+        </p>
       </div>
 
       <button onclick="saveData()">💾 保存所有修改</button>
@@ -65,9 +87,16 @@
   </div>
 
   <script>
-    const OWNER = 'VeryLiang0', REPO = 'my-photo-site', BRANCH = 'main', DATA_PATH = 'data.json', IMAGES_PATH = 'images/';
-    let token = '', currentData = {};
+    const OWNER = 'VeryLiang0';
+    const REPO = 'my-photo-site';
+    const BRANCH = 'main';
+    const DATA_PATH = 'data.json';
+    const IMAGES_PATH = 'images/';
 
+    let token = '';
+    let currentData = {};
+
+    // ---------- 登录 ----------
     function saveToken() {
       const t = document.getElementById('tokenInput').value.trim();
       if (!t) return alert('请输入 Token');
@@ -77,19 +106,31 @@
       document.getElementById('editorSection').classList.remove('hidden');
       loadData();
     }
-    (function(){
+
+    (function () {
       const stored = sessionStorage.getItem('gh_token');
-      if(stored){ token=stored; document.getElementById('loginSection').classList.add('hidden'); document.getElementById('editorSection').classList.remove('hidden'); loadData(); }
+      if (stored) {
+        token = stored;
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('editorSection').classList.remove('hidden');
+        loadData();
+      }
     })();
 
+    // ---------- 加载 data.json ----------
     async function loadData() {
       try {
-        const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, { headers: { Authorization: `token ${token}` } });
-        if(!res.ok) throw new Error(`加载失败 (${res.status})，请确认 Token 正确且仓库路径存在`);
+        const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, {
+          headers: { Authorization: `token ${token}` }
+        });
+        if (!res.ok) throw new Error(`加载失败 (${res.status})`);
         const file = await res.json();
-        currentData = JSON.parse(decodeURIComponent(escape(atob(file.content))));
+        const jsonStr = decodeURIComponent(escape(atob(file.content)));
+        currentData = JSON.parse(jsonStr);
         fillForm(currentData);
-      } catch(e) { alert('加载数据出错: ' + e.message); }
+      } catch (e) {
+        alert('加载数据出错: ' + e.message);
+      }
     }
 
     function fillForm(d) {
@@ -102,87 +143,161 @@
       renderPhotos(d.photos || []);
     }
 
+    // ---------- 作品列表渲染 ----------
     function renderPhotos(photos) {
       const container = document.getElementById('photosContainer');
       container.innerHTML = '';
-      photos.forEach((p,i)=>{
-        const div = document.createElement('div'); div.className='photo-item';
-        div.innerHTML = `<img src="${p.src}" alt="" onerror="this.style.display='none'">
-          <label>图片文件名/路径</label><input type="text" class="photo-src" value="${p.src}">
-          <label>描述</label><input type="text" class="photo-alt" value="${p.alt||''}">
+      photos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'photo-item';
+        div.innerHTML = `
+          <img src="${p.src}" alt="" onerror="this.style.display='none'">
+          <label>图片文件名/路径</label>
+          <input type="text" class="photo-src" value="${p.src}">
+          <label>描述</label>
+          <input type="text" class="photo-alt" value="${p.alt || ''}">
           <input type="file" class="photo-file" accept="image/*" data-index="${i}">
-          <button onclick="this.parentElement.remove()">删除</button>`;
+          <button onclick="this.parentElement.remove()">删除</button>
+        `;
         container.appendChild(div);
       });
     }
 
     function addPhoto() {
       const container = document.getElementById('photosContainer');
-      const div = document.createElement('div'); div.className='photo-item';
-      div.innerHTML = `<img src="" alt="" style="display:none;">
-        <label>图片文件名/路径</label><input type="text" class="photo-src" value="" placeholder="上传后自动填充">
-        <label>描述</label><input type="text" class="photo-alt" value="">
+      const div = document.createElement('div');
+      div.className = 'photo-item';
+      div.innerHTML = `
+        <img src="" alt="" style="display:none;">
+        <label>图片文件名/路径</label>
+        <input type="text" class="photo-src" value="" placeholder="上传后自动填充">
+        <label>描述</label>
+        <input type="text" class="photo-alt" value="">
         <input type="file" class="photo-file" accept="image/*">
-        <button onclick="this.parentElement.remove()">删除</button>`;
+        <button onclick="this.parentElement.remove()">删除</button>
+      `;
       container.appendChild(div);
     }
 
-    // 修复后的上传函数
+    // ---------- 智能压缩 + 上传（新规则：≤40MB 不压缩，>40MB 压缩）----------
     async function uploadImage(file) {
-      if (file.size > 5 * 1024 * 1024) throw new Error('图片过大（超过5MB），请压缩后再上传');
+      // 仅以文件大小判断是否压缩：>40MB 才压缩
+      const needCompress = file.size > 40 * 1024 * 1024;
+      
+      let blobToUpload = file;
+      let ext = file.name.split('.').pop().toLowerCase();
+      
+      if (needCompress) {
+        // 压缩为 WebP，最大尺寸 2000px，质量 0.8
+        blobToUpload = await compressImage(file, 2000, 0.8);
+        ext = 'webp';
+      }
+
+      // 转为 base64
       const reader = new FileReader();
       return new Promise((resolve, reject) => {
         reader.onload = async () => {
           const base64 = reader.result.split(',')[1];
-          const fileName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+          const fileName = Date.now() + '_' + file.name.replace(/\s+/g, '_').replace(/\.[^/.]+$/, '.' + ext);
           const path = IMAGES_PATH + fileName;
+
           try {
-            // 检查是否已存在同名文件
             let sha = null;
             try {
-              const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`, { headers: { Authorization: `token ${token}` } });
-              if (getRes.ok) { const existing = await getRes.json(); sha = existing.sha; }
-              else if (getRes.status !== 404) throw new Error(`检查文件状态失败 (${getRes.status})`);
-            } catch(e) { if (e.message.includes('404')) {} else throw e; }
+              const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`, {
+                headers: { Authorization: `token ${token}` }
+              });
+              if (getRes.ok) {
+                const existing = await getRes.json();
+                sha = existing.sha;
+              } else if (getRes.status !== 404) {
+                throw new Error(`检查文件状态失败 (${getRes.status})`);
+              }
+            } catch(e) {
+              if (!e.message.includes('404')) throw e;
+            }
 
-            const body = { message: `上传图片 ${fileName}`, content: base64, branch: BRANCH };
+            const body = {
+              message: `上传图片 ${fileName}`,
+              content: base64,
+              branch: BRANCH
+            };
             if (sha) body.sha = sha;
 
             const putRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
               method: 'PUT',
-              headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+              headers: {
+                Authorization: `token ${token}`,
+                'Content-Type': 'application/json'
+              },
               body: JSON.stringify(body)
             });
+
             if (!putRes.ok) {
               const errData = await putRes.json();
               throw new Error(`上传失败 (${putRes.status}): ${errData.message}`);
             }
+
             const data = await putRes.json();
             resolve(data.content.path);
-          } catch(e) { reject(e); }
+          } catch (e) {
+            reject(e);
+          }
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(blobToUpload);
       });
     }
 
+    // 使用 Canvas 压缩图片（限制最大尺寸，质量）
+    function compressImage(file, maxDimension, quality) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = function() {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('压缩失败'));
+          }, 'image/webp', quality);
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    // ---------- 保存数据 ----------
     async function saveData() {
       const statusEl = document.getElementById('status');
-      statusEl.textContent = '⏳ 正在上传图片并保存...';
-      statusEl.className = '';
+      statusEl.textContent = '⏳ 正在处理并保存...';
+      statusEl.className = 'status-info';
+
       try {
-        // 处理图片上传
         const fileInputs = document.querySelectorAll('.photo-file');
         for (const input of fileInputs) {
           if (input.files.length > 0) {
-            statusEl.textContent = `正在上传图片：${input.files[0].name} ...`;
-            const path = await uploadImage(input.files[0]);
+            const file = input.files[0];
+            statusEl.textContent = `正在上传图片：${file.name} ...`;
+            const path = await uploadImage(file);
             const item = input.closest('.photo-item');
             item.querySelector('.photo-src').value = path;
-            input.value = ''; // 清除文件选择，显示已上传
+            input.value = '';
           }
         }
 
-        // 收集数据
         const newData = {
           siteName: document.getElementById('siteName').value.trim(),
           subtitle: document.getElementById('subtitle').value.trim(),
@@ -192,39 +307,54 @@
           background: document.getElementById('background').value,
           photos: []
         };
+
         const photoItems = document.querySelectorAll('.photo-item');
-        photoItems.forEach(item=>{
+        photoItems.forEach(item => {
           const src = item.querySelector('.photo-src').value.trim();
-          if(src) newData.photos.push({ src, alt: item.querySelector('.photo-alt').value.trim() });
+          if (src) {
+            newData.photos.push({
+              src: src,
+              alt: item.querySelector('.photo-alt').value.trim()
+            });
+          }
         });
 
-        const jsonStr = JSON.stringify(newData, null, 0);
-        // 使用 TextEncoder 支持 Unicode
+        const jsonStr = JSON.stringify(newData);
         const encoder = new TextEncoder();
         const dataBytes = encoder.encode(jsonStr);
         const base64Content = btoa(String.fromCharCode(...new Uint8Array(dataBytes)));
 
-        // 获取当前 sha
-        const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, { headers: { Authorization: `token ${token}` } });
+        const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, {
+          headers: { Authorization: `token ${token}` }
+        });
         if (!getRes.ok) throw new Error(`获取文件信息失败 (${getRes.status})`);
         const fileInfo = await getRes.json();
 
-        // 更新 data.json
         const updateRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}`, {
           method: 'PUT',
-          headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: '更新网站内容', content: base64Content, sha: fileInfo.sha, branch: BRANCH })
+          headers: {
+            Authorization: `token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: '更新网站内容',
+            content: base64Content,
+            sha: fileInfo.sha,
+            branch: BRANCH
+          })
         });
+
         if (!updateRes.ok) {
           const errData = await updateRes.json();
           throw new Error(`保存失败 (${updateRes.status}): ${errData.message}`);
         }
-        statusEl.textContent = '✅ 保存成功！网站将在 1-2 分钟内更新。';
-        statusEl.className = '';
+
+        statusEl.textContent = '✅ 保存成功！网站将在 1-2 分钟内自动更新。';
+        statusEl.className = 'status-success';
         currentData = newData;
-      } catch(e) {
+      } catch (e) {
         statusEl.textContent = '❌ ' + e.message;
-        statusEl.className = 'error';
+        statusEl.className = 'status-error';
         console.error(e);
       }
     }
