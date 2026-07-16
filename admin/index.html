@@ -34,6 +34,8 @@
     .hint { font-size: 0.8rem; color: #888; margin-top: -10px; margin-bottom: 10px; }
     .hidden { display: none; }
     .bg-preview { max-width: 200px; max-height: 120px; margin: 10px 0; display: none; border-radius: 4px; }
+    .checkbox-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+    .checkbox-row input[type="checkbox"] { width: auto; margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -65,13 +67,16 @@
           <option value="custom">自定义背景图</option>
         </select>
 
-        <!-- 自定义背景图区域（默认隐藏） -->
         <div id="customBgSection" style="display:none;">
           <label>自定义背景图</label>
           <input type="text" id="customBgImage" placeholder="图片路径，如 images/bg.jpg">
           <input type="file" id="customBgFile" accept="image/*">
           <button onclick="uploadCustomBg()">上传背景图</button>
           <img id="customBgPreview" class="bg-preview" alt="背景预览">
+          <div class="checkbox-row">
+            <input type="checkbox" id="bgParticles">
+            <label for="bgParticles" style="margin-bottom:0;">叠加粒子效果</label>
+          </div>
         </div>
       </div>
 
@@ -97,16 +102,16 @@
     const BRANCH = 'main';
     const DATA_PATH = 'data.json';
     const IMAGES_PATH = 'images/';
-    let token = '', currentData = {};
 
-    // 切换背景类型时显示/隐藏自定义背景区域
+    let token = '';
+    let currentData = {};
+
     function toggleCustomBg() {
       const bgType = document.getElementById('background').value;
       const section = document.getElementById('customBgSection');
       section.style.display = bgType === 'custom' ? 'block' : 'none';
     }
 
-    // 上传自定义背景图
     async function uploadCustomBg() {
       const fileInput = document.getElementById('customBgFile');
       const file = fileInput.files[0];
@@ -115,7 +120,6 @@
       statusEl.textContent = '正在上传背景图...';
       statusEl.className = 'status-info';
       try {
-        // 上传原图（不压缩，或可简单压缩）
         const reader = new FileReader();
         const base64 = await new Promise((resolve, reject) => {
           reader.onload = () => resolve(reader.result.split(',')[1]);
@@ -160,7 +164,7 @@
       }
     }
 
-    // ---------- 登录、加载、渲染（省略重复部分，与原后台相同）----------
+    // ---------- 登录 ----------
     function saveToken() {
       const t = document.getElementById('tokenInput').value.trim();
       if (!t) return alert('请输入 Token');
@@ -201,21 +205,22 @@
       document.getElementById('douyin').value = d.douyin || '';
       document.getElementById('background').value = d.background || 'static';
       document.getElementById('customBgImage').value = d.customBgImage || '';
+      document.getElementById('bgParticles').checked = d.bgParticles || false;
       if (d.customBgImage) {
         document.getElementById('customBgPreview').src = d.customBgImage;
         document.getElementById('customBgPreview').style.display = 'block';
       }
-      toggleCustomBg(); // 根据当前背景类型显示/隐藏
+      toggleCustomBg();
       renderPhotos(d.photos || []);
     }
 
-    // 作品列表渲染（与原后台相同）
-    function renderPhotos(photos) { /* ...同之前完整代码... */
+    function renderPhotos(photos) {
       const container = document.getElementById('photosContainer');
       container.innerHTML = '';
       photos.forEach((p, i) => {
         const div = document.createElement('div'); div.className = 'photo-item';
-        div.innerHTML = `<img src="${p.thumb || p.src}" alt="" onerror="this.style.display='none'" style="max-height:100px;">
+        div.innerHTML = `
+          <img src="${p.thumb || p.src}" alt="" onerror="this.style.display='none'" style="max-height:100px;">
           <label>缩略图</label><input type="text" class="photo-thumb" value="${p.thumb || ''}" placeholder="自动生成">
           <label>原图路径</label><input type="text" class="photo-src" value="${p.src}">
           <label>描述</label><input type="text" class="photo-alt" value="${p.alt || ''}">
@@ -228,7 +233,8 @@
     function addPhoto() {
       const container = document.getElementById('photosContainer');
       const div = document.createElement('div'); div.className = 'photo-item';
-      div.innerHTML = `<img src="" alt="" style="display:none;">
+      div.innerHTML = `
+        <img src="" alt="" style="display:none;">
         <label>缩略图</label><input type="text" class="photo-thumb" value="" placeholder="上传后自动填充">
         <label>原图路径</label><input type="text" class="photo-src" value="" placeholder="上传后自动填充">
         <label>描述</label><input type="text" class="photo-alt" value="">
@@ -237,7 +243,6 @@
       container.appendChild(div);
     }
 
-    // 智能压缩 + 上传（含缩略图）
     async function uploadImage(file) {
       const needCompress = file.size > 40 * 1024 * 1024;
       let mainBlob = file, ext = file.name.split('.').pop().toLowerCase();
@@ -301,7 +306,6 @@
       });
     }
 
-    // 保存数据（增加 customBgImage 字段）
     async function saveData() {
       const statusEl = document.getElementById('status');
       statusEl.textContent = '⏳ 正在处理并保存...';
@@ -330,6 +334,7 @@
           douyin: document.getElementById('douyin').value.trim(),
           background: document.getElementById('background').value,
           customBgImage: document.getElementById('customBgImage').value.trim(),
+          bgParticles: document.getElementById('bgParticles').checked,
           photos: []
         };
         const photoItems = document.querySelectorAll('.photo-item');
