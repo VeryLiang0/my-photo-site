@@ -289,7 +289,7 @@ function refreshMoveState(){
   });
 }
 function wirePhotoActions(){
-  $$('#photosContainer').addEventListener('click',function(e){
+  $('#photosContainer').addEventListener('click',function(e){
     var btn=e.target.closest('[data-act]');
     if(!btn) return;
     var item=btn.closest('.ph-item');
@@ -304,7 +304,7 @@ function wirePhotoActions(){
       refreshMoveState();
     }
   });
-  $$('#addPhotoBtn').addEventListener('click',function(){
+  $('#addPhotoBtn').addEventListener('click',function(){
     var box=$('#photosContainer');
     box.insertAdjacentHTML('beforeend',photoRowHTML({src:'',thumb:'',alt:''},photoItems().length));
     refreshMoveState();
@@ -329,8 +329,7 @@ function wirePhotoActions(){
   }
   var sv=$('#saveBtn');
   if(sv && !sv.dataset.wired){ sv.dataset.wired='1'; sv.addEventListener('click',saveData); }
-  var cont=$('#photosContainer');
-  if(cont && !cont.dataset.wired){ cont.dataset.wired='1'; cont.addEventListener('click',photoContainerClick); }
+
 }
 function photoContainerClick(e){
   var btn=e.target.closest('[data-act]');
