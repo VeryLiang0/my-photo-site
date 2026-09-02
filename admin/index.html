@@ -289,21 +289,8 @@ function refreshMoveState(){
   });
 }
 function wirePhotoActions(){
-  $('#photosContainer').addEventListener('click',function(e){
-    var btn=e.target.closest('[data-act]');
-    if(!btn) return;
-    var item=btn.closest('.ph-item');
-    var act=btn.getAttribute('data-act');
-    if(act==='del'){ item.remove(); refreshMoveState(); }
-    else{
-      var items=photoItems(), idx=items.indexOf(item);
-      var j=act==='up'?idx-1:idx+1;
-      if(j<0||j>=items.length) return;
-      if(act==='up') item.parentElement.insertBefore(item,items[j]);
-      else item.parentElement.insertBefore(items[j],item);
-      refreshMoveState();
-    }
-  });
+  var photoBox=$('#photosContainer');
+  if(photoBox && !photoBox.dataset.wired){ photoBox.dataset.wired='1'; photoBox.addEventListener('click',photoContainerClick); }
   $('#addPhotoBtn').addEventListener('click',function(){
     var box=$('#photosContainer');
     box.insertAdjacentHTML('beforeend',photoRowHTML({src:'',thumb:'',alt:''},photoItems().length));
