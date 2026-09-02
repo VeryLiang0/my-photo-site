@@ -14,7 +14,7 @@
   --body:'LXGW WenKai','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
   --num:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
   --gutter:clamp(20px,4vw,60px);
-  --width:1280px;
+  --width:1440px;
   --r:6px;
   --ease:cubic-bezier(.25,.6,.25,1);
   /* 浅色区（默认） */
@@ -289,6 +289,36 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
   .hero-art .art-box{height:min(52vh,430px)}
   .art-bar{gap:12px}
 }
+
+/* ============ 首页首屏内容放大（追加于末尾以保证覆盖） ============ */
+.hero-inner{max-width:1440px;grid-template-columns:minmax(0,1fr) minmax(0,620px);gap:clamp(32px,5vw,88px);
+  padding-left:clamp(28px,4.5vw,68px);padding-right:clamp(28px,4.5vw,68px)}
+.hero h1{font-size:clamp(3.2rem,7.5vw,6.6rem)}
+.hero-art{max-width:620px}
+.art-box{height:min(74vh,700px)}
+/* 窄屏覆盖：收窄右栏 / 转单列并收窄内边距，避免手机横向溢出 */
+@media(max-width:1080px){
+  .hero-inner{grid-template-columns:minmax(0,1fr) minmax(0,480px);gap:clamp(28px,4vw,56px)}
+  .hero-art .art-box{height:min(62vh,560px)}
+}
+@media(max-width:920px){
+  .hero-inner{grid-template-columns:1fr;padding-left:clamp(20px,6vw,36px);padding-right:clamp(20px,6vw,36px)}
+  .hero-art{justify-self:stretch;order:2;max-width:none;width:100%;margin-top:6px}
+  .hero-art .art-box{height:min(56vh,470px)}
+}
+@media(max-width:480px){
+  .hero-inner{padding-left:18px;padding-right:18px}
+  .hero h1{font-size:clamp(2.2rem,10.5vw,3.2rem)}
+  .hero-art .art-box{height:min(50vh,420px)}
+}
+/* final hero scale */
+.hero-inner{max-width:1440px;grid-template-columns:minmax(0,1fr) minmax(0,620px);gap:clamp(32px,5vw,88px);padding-left:clamp(28px,4.5vw,68px);padding-right:clamp(28px,4.5vw,68px)}
+.hero h1{font-size:clamp(3.2rem,7.5vw,6.6rem)}
+.hero-art{max-width:620px}
+.art-box{height:min(74vh,700px)}
+@media(max-width:1080px){.hero-inner{grid-template-columns:minmax(0,1fr) minmax(0,470px);gap:34px}.art-box{height:min(62vh,560px)}}
+@media(max-width:920px){.hero-inner{grid-template-columns:1fr;gap:20px;padding:104px 24px 112px}.hero-art{width:100%;max-width:none}.art-box{height:min(56vh,500px)}}
+@media(max-width:480px){.hero-inner{padding:94px 18px 104px}.hero h1{font-size:clamp(2.45rem,11vw,3.5rem)}.art-box{height:min(52vh,430px)}.art-bar{gap:12px}}
 </style>
 </head>
 <body>
@@ -595,7 +625,7 @@ function stageTo(i){
   $('#sceneTag').textContent='SCENE '+pad2(stage.i+1)+' / PORTFOLIO';
   $('#railCount').innerHTML='<b>'+pad2(stage.i+1)+'</b>/'+pad2(photos.length);
   var bd=$('#stageBackdrop');
-  bd.style.backgroundImage=(state.customBgImage||p.src) ? "url('"+(state.customBgImage||p.src)+"')" : '';
+  bd.style.backgroundImage=p.src ? "url('"+p.src+"')" : '';
   preloadStage(1);
 }
 function preloadStage(d){
