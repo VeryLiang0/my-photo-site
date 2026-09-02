@@ -1,426 +1,488 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>网站后台管理</title>
-  <style>
-    :root { --bg: #1e1e2e; --panel: #2a2a3c; --text: #ccc; --accent: #89b4fa; --danger: #f38ba8; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; }
-    h1 { text-align: center; margin-bottom: 30px; color: #fff; }
-    .section { background: var(--panel); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-    .section h2 { margin-bottom: 15px; font-size: 1.2rem; color: var(--accent); }
-    label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
-    input, textarea, select {
-      width: 100%; padding: 8px; margin-bottom: 15px;
-      background: #1e1e2e; border: 1px solid #444; color: #fff;
-      border-radius: 4px; font-size: 1rem;
-    }
-    textarea { resize: vertical; min-height: 80px; }
-    button {
-      padding: 10px 20px; background: var(--accent); color: #000;
-      border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px;
-    }
-    button:disabled { opacity: 0.5; cursor: default; }
-    .photo-item { border: 1px solid #444; border-radius: 4px; padding: 10px; margin-bottom: 10px; }
-    .photo-item img { max-height: 100px; margin-bottom: 5px; border-radius: 4px; }
-    .photo-item input { margin-bottom: 5px; }
-    #status { margin-top: 20px; text-align: center; font-weight: bold; }
-    .status-info { color: #89b4fa; }
-    .status-success { color: #a6e3a1; }
-    .status-error { color: #f38ba8; }
-    .hint { font-size: 0.8rem; color: #888; margin-top: -10px; margin-bottom: 10px; }
-    .hidden { display: none; }
-    .bg-preview { max-width: 200px; max-height: 120px; margin: 10px 0; display: none; border-radius: 4px; }
-    .checkbox-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-    .checkbox-row input[type="checkbox"] { width: auto; margin-bottom: 0; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b0b0b">
+<title>管理后台 · 小林花花</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000000'/%3E%3Ctext x='32' y='45' font-size='34' text-anchor='middle' fill='%23ffffff' font-family='Kaiti,serif'%3E%E8%8A%B1%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --kai:'LXGW WenKai','Kaiti SC','KaiTi','PingFang SC','Microsoft YaHei',serif;
+  --font:system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --bg:#f3f3ef; --card:#ffffff; --txt:#161616; --txt2:#555; --muted:#8c8c84;
+  --line:#e4e4dd; --black:#0b0b0b; --shadow:0 10px 30px rgba(0,0,0,.08);
+  --r:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh}
+::selection{background:#000;color:#fff}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit;color:inherit}
+a{color:inherit}
+
+/* 顶栏 */
+.top{background:var(--black);color:#fff;padding:16px 0}
+.top .in{max-width:960px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:12px;letter-spacing:.1em}
+.brand .mark{width:34px;height:34px;border-radius:50%;background:#fff;color:#000;display:grid;place-items:center;font-family:var(--kai);font-size:16px}
+.brand b{font-family:var(--kai);font-weight:400;font-size:18px}
+.brand small{display:block;font-size:10px;letter-spacing:.28em;color:rgba(255,255,255,.5)}
+.link{color:rgba(255,255,255,.8);font-size:13px;letter-spacing:.1em;text-decoration:none;border:1px solid rgba(255,255,255,.3);padding:7px 16px;border-radius:999px;transition:.25s}
+.link:hover{color:#000;background:#fff;border-color:#fff}
+
+.wrap{max-width:960px;margin:0 auto;padding:26px 22px 120px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 26px 16px;margin-bottom:22px;box-shadow:var(--shadow)}
+.card h2{font-family:var(--kai);font-weight:400;font-size:19px;letter-spacing:.12em;display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.card h2 .no{font-size:11px;font-family:ui-monospace,monospace;letter-spacing:.2em;color:var(--muted)}
+.card h2 .hint-t{font-size:12px;color:var(--muted);letter-spacing:0;margin-left:auto;font-family:var(--font);font-weight:400}
+
+label{display:block;font-size:12.5px;color:var(--txt2);margin:14px 0 6px;letter-spacing:.06em}
+label .req{color:#c00}
+input[type=text],input[type=password],input[type=number],textarea,select{
+  width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:8px;background:#fafaf7;
+  font-size:14.5px;transition:border-color .2s,box-shadow .2s;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--black);box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+textarea{resize:vertical;min-height:74px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.hint{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.7}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 22px;border-radius:999px;
+  border:1px solid transparent;font-size:14px;letter-spacing:.08em;transition:.25s}
+.btn.black{background:var(--black);color:#fff}
+.btn.black:hover{opacity:.82;transform:translateY(-1px)}
+.btn.line{border-color:var(--line);background:#fff}
+.btn.line:hover{border-color:var(--black)}
+.btn:disabled{opacity:.45;pointer-events:none}
+.btn.sm{padding:6px 12px;font-size:12px}
+.btn svg{width:15px;height:15px}
+
+/* 上传小工具 */
+.file-btn{position:relative;overflow:hidden}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* 登录卡 */
+#loginSection{max-width:430px;margin:9vh auto 0}
+.login-hero{text-align:center;margin-bottom:22px}
+.login-hero .mark{width:64px;height:64px;border-radius:50%;background:#000;color:#fff;display:grid;place-items:center;margin:0 auto 12px;font-family:var(--kai);font-size:30px}
+.login-hero h1{font-family:var(--kai);font-weight:400;letter-spacing:.2em;font-size:22px}
+.login-hero p{color:var(--muted);font-size:13px;margin-top:6px}
+.login-note{font-size:12px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.8}
+
+/* 图片预览选择器 */
+.bg-box{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.bg-preview{width:210px;height:118px;border-radius:8px;border:1px solid var(--line);object-fit:cover;display:none;background:#eee}
+.bg-box .col{flex:1;min-width:240px}
+
+/* 作品条目 */
+.ph-item{border:1px solid var(--line);border-radius:10px;background:#fcfcf9;margin-bottom:14px;overflow:hidden}
+.ph-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ph-head .idx{font-family:ui-monospace,monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;min-width:30px}
+.ph-head .move{display:flex;gap:6px}
+.arrow{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 8px;color:var(--txt2);font-size:13px}
+.arrow:hover:not(:disabled){border-color:#000;color:#000}
+.arrow:disabled{opacity:.3;cursor:not-allowed}
+.ph-head .name{font-family:var(--kai);font-size:14px;color:var(--txt);letter-spacing:.08em;margin-right:auto}
+.del{color:#b00;border:1px solid rgba(200,0,0,.25);background:#fff;border-radius:6px;padding:4px 10px;font-size:12.5px}
+.del:hover{background:#b00;color:#fff}
+.ph-body{display:grid;grid-template-columns:118px 1fr;gap:16px;padding:14px}
+.ph-body .thumb{width:118px;height:118px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#e9e9e3;display:block}
+.ph-body .thumb.broken{opacity:.35}
+.ph-body label{margin-top:0}
+.ph-fields label{margin:10px 0 4px}
+.ph-tools{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* 保存栏 */
+.savebar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,11,11,.94);color:#fff;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);z-index:50;padding:14px 0}
+.savebar .in{max-width:960px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.savebar .btn.black{background:#fff;color:#000}
+.savebar .btn.black:hover{opacity:.85}
+#status{font-size:13.5px;letter-spacing:.03em;margin-left:auto;max-width:56%;line-height:1.6}
+.st-info{color:rgba(255,255,255,.75)}
+.st-ok{color:#8ee09a}
+.st-err{color:#ff8f8f}
+@media(max-width:760px){
+  .row2{grid-template-columns:1fr}
+  .ph-body{grid-template-columns:1fr}
+  .ph-body .thumb{width:100%;height:auto;max-height:200px}
+  #status{max-width:100%;margin-left:0}
+}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>🖼️ 网站后台管理</h1>
 
-    <!-- 登录区域 -->
-    <div id="loginSection" class="section">
-      <h2>输入 GitHub Token</h2>
-      <input type="password" id="tokenInput" placeholder="粘贴你的 GitHub Personal Access Token">
-      <button onclick="saveToken()">保存并登录</button>
-      <p class="hint">Token 仅存储在浏览器中，请确保具有 repo 权限。</p>
+<header class="top">
+  <div class="in">
+    <div class="brand"><span class="mark">花</span><span><b id="topName">小林花花</b><small>CONTENT MANAGER</small></span></div>
+    <a class="link" href="index.html" target="_blank" rel="noopener">打开前台预览 ↗</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- 登录 -->
+  <div class="card" id="loginSection">
+    <div class="login-hero">
+      <div class="mark">花</div>
+      <h1>网站内容管理</h1>
+      <p>登录 GitHub 后即可编辑站点、上传与排序作品</p>
     </div>
-
-    <!-- 编辑区域（登录后显示） -->
-    <div id="editorSection" class="hidden">
-      <div class="section">
-        <h2>基本信息</h2>
-        <label>摄影师名字</label><input type="text" id="siteName">
-        <label>副标题</label><input type="text" id="subtitle">
-        <label>拍摄风格</label><input type="text" id="style" placeholder="如：二次元、古风">
-        <label>QQ账号（仅文本展示）</label><input type="text" id="qq" placeholder="如：123456789">
-        <!-- 修复 title 属性引号 -->
-        <label>抖音号（前台固定显示“小林花花”）</label><input type="text" id="douyin" placeholder="yansheng7000" disabled title='前台已固定为“小林花花”'>
-
-        <label>网页背景</label>
-        <select id="background" onchange="toggleCustomBg()">
-          <option value="static">静态深色</option>
-          <option value="gradient">流动渐变</option>
-          <option value="particles">粒子星空</option>
-          <option value="gradient-particles">渐变+粒子</option>
-          <option value="custom">自定义背景图</option>
-        </select>
-
-        <!-- 自定义背景区域 -->
-        <div id="customBgSection" style="display:none;">
-          <label>自定义背景图</label>
-          <input type="text" id="customBgImage" placeholder="上传后自动填充路径">
-          <input type="file" id="customBgFile" accept="image/*">
-          <button onclick="uploadCustomBg()">上传背景图</button>
-          <img id="customBgPreview" class="bg-preview" alt="背景预览">
-          <div class="checkbox-row">
-            <input type="checkbox" id="bgParticles">
-            <label for="bgParticles" style="margin-bottom:0;">叠加粒子效果</label>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>作品列表</h2>
-        <div id="photosContainer"></div>
-        <button onclick="addPhoto()">+ 添加新作品</button>
-        <!-- ✅ 可见的缩略图参数提醒 -->
-        <p class="hint">
-          📌 支持 JPG、PNG、WEBP。<br>
-          ⚡ 单张 ≤ 40MB 原样上传，>40MB 自动压缩为 WebP。<br>
-          🖼️ 系统自动生成缩略图：<strong>宽 600px，质量 0.9</strong>。<br>
-          🔧 需要修改参数？打开代码搜索 <code>THUMB_WIDTH</code> 和 <code>THUMB_QUALITY</code> 即可。
-        </p>
-      </div>
-
-      <button onclick="saveData()">💾 保存所有修改</button>
-      <div id="status"></div>
-    </div>
+    <label>GitHub Personal Access Token</label>
+    <input type="password" id="tokenInput" placeholder="粘贴有 repo 权限的 Token" autocomplete="off">
+    <button class="btn black" id="loginBtn" style="width:100%;margin-top:6px">保存并登录</button>
+    <p class="login-note">Token 只保存在本浏览器（本次会话）。<br>编辑结果会直接写入 GitHub 仓库，1–2 分钟后前台更新。</p>
   </div>
 
-  <script>
-    const OWNER = 'VeryLiang0';
-    const REPO = 'my-photo-site';
-    const BRANCH = 'main';
-    const DATA_PATH = 'data.json';
-    const IMAGES_PATH = 'images/';
+  <!-- 编辑器 -->
+  <div id="editorSection" style="display:none">
+    <div class="card">
+      <h2><span class="no">01</span> 基本信息 <span class="hint-t">这些会显示在首页首屏</span></h2>
+      <div class="row2">
+        <div><label>摄影师名字 / 站名</label><input type="text" id="siteName" placeholder="小林花花"></div>
+        <div><label>副标题（主标语）</label><input type="text" id="subtitle" placeholder="二次元人像摄影师"></div>
+      </div>
+      <div class="row2">
+        <div><label>拍摄风格标签</label><input type="text" id="style" placeholder="如：战斗系、古风"></div>
+        <div><label>大标题第二行</label><input type="text" id="heroTitle2" placeholder="视觉作品集"></div>
+      </div>
+      <label>首页介绍文字</label>
+      <textarea id="intro" placeholder="写一段自我介绍 / 创作方向 / 约拍说明"></textarea>
+      <div class="row2">
+        <div><label>QQ 号</label><input type="text" id="qq" placeholder="如：884031786"></div>
+        <div><label>抖音号（可编辑）</label><input type="text" id="douyin" placeholder="抖音搜索的账号，如 yansheng7000"></div>
+      </div>
+    </div>
 
-    let token = '';
-    let currentData = {};
+    <div class="card">
+      <h2><span class="no">02</span> 首页背景 <span class="hint-t">留空则自动使用当前展示的作品图作背景</span></h2>
+      <div class="bg-box">
+        <div class="col">
+          <label>自定义背景图路径</label>
+          <input type="text" id="customBgImage" placeholder="images/bg.jpg（上传后自动填入）">
+          <div class="ph-tools">
+            <span class="btn line sm file-btn">选择背景图<input type="file" id="customBgFile" accept="image/*"></span>
+            <button class="btn line sm" id="bgClearBtn">清除</button>
+          </div>
+        </div>
+        <img class="bg-preview" id="customBgPreview" alt="背景预览">
+      </div>
+      <p class="hint">说明：当前主题为黑白简约风。背景建议使用大尺寸人像图；也可留空，让系统自动把“正在展示的作品”模糊成背景。</p>
+    </div>
 
-    // ---------- 自定义背景功能 ----------
-    function toggleCustomBg() {
-      const bgType = document.getElementById('background').value;
-      const section = document.getElementById('customBgSection');
-      section.style.display = bgType === 'custom' ? 'block' : 'none';
+    <div class="card">
+      <h2><span class="no">03</span> 作品管理 <span class="hint-t">点 ⬆⬇ 可排序 · 首图即首页轮播第一张</span></h2>
+      <div id="photosContainer"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn black" id="addPhotoBtn">＋ 添加新作品</button>
+      </div>
+      <p class="hint">每行可：修改名称（会显示在图片下方与“正在展示”里）· 上传/替换图片（自动压缩 + 生成缩略图）· 删除该条目。<br>支持 JPG / PNG / WEBP；单张超过 40MB 自动压缩为 WebP。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 底部保存栏 -->
+<div class="savebar" style="display:none" id="savebar">
+  <div class="in">
+    <button class="btn black" id="saveBtn">💾 保存所有修改</button>
+    <div id="status" class="st-info">载入中…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var OWNER='VeryLiang0', REPO='my-photo-site', BRANCH='main';
+var DATA_PATH='data.json', IMAGES_PATH='images/';
+var token='', currentData={};
+
+var $=function(s){ return document.querySelector(s); };
+var $$=function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+/* ---------- 登录 ---------- */
+$('#loginBtn').addEventListener('click',function(){
+  var t=$('#tokenInput').value.trim();
+  if(!t) return alert('请输入 Token');
+  token=t; sessionStorage.setItem('gh_token',t);
+  enter();
+});
+(function(){ var t=sessionStorage.getItem('gh_token'); if(t){ token=t; enter(); } })();
+
+function enter(){
+  $('#loginSection').style.display='none';
+  $('#editorSection').style.display='block';
+  $('#savebar').style.display='block';
+  setStatus('正在读取仓库数据…','info');
+  loadData();
+}
+function setStatus(msg,cls){
+  var el=$('#status');
+  el.className=cls==='ok'?'st-ok':cls==='err'?'st-err':'st-info';
+  el.textContent=msg;
+}
+
+/* ---------- 读取 ---------- */
+function loadData(){
+  fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+DATA_PATH+'?ref='+BRANCH,{headers:{Authorization:'token '+token}})
+    .then(function(r){ if(!r.ok) throw new Error('读取失败 ('+r.status+')'); return r.json(); })
+    .then(function(file){
+      currentData=JSON.parse(decodeURIComponent(escape(atob(file.content))));
+      fillForm(currentData);
+      setStatus('数据已读取 ✅ 修改后记得保存','ok');
+    })
+    .catch(function(e){ setStatus('❌ '+e.message,'err'); });
+}
+
+function fillForm(d){
+  $('#topName').textContent=d.siteName||'小林花花';
+  $('#siteName').value=d.siteName||'';
+  $('#subtitle').value=d.subtitle||'';
+  $('#style').value=d.style||'';
+  $('#heroTitle2').value=d.heroTitle2||'';
+  $('#intro').value=d.intro||'';
+  $('#qq').value=d.qq||'';
+  $('#douyin').value=d.douyin||'';
+  $('#customBgImage').value=d.customBgImage||'';
+  if(d.customBgImage){ var p=$('#customBgPreview'); p.src=d.customBgImage; p.style.display='block'; }
+  renderPhotos(d.photos||[]);
+}
+
+/* ---------- 作品列表 ---------- */
+function photoRowHTML(p,i){
+  return ''+
+  '<div class="ph-item" data-i="'+i+'">'+
+    '<div class="ph-head">'+
+      '<span class="idx">#'+String(i+1).padStart(2,'0')+'</span>'+
+      '<span class="move">'+
+        '<button class="arrow" data-act="up" title="上移" '+ (i===0?'disabled':'') +'>↑</button>'+
+        '<button class="arrow" data-act="down" title="下移" '+ (i===0?'disabled':'') +'>↓</button>'+
+      '</span>'+
+      '<span class="name">'+( (p.alt||'').slice(0,12)||'（未命名）')+'</span>'+
+      '<button class="del" data-act="del">删除</button>'+
+    '</div>'+
+    '<div class="ph-body">'+
+      '<img class="thumb" alt="" '+(p.thumb||p.src?'src="'+(p.thumb||p.src)+'"':'')+'>'+
+      '<div class="ph-fields">'+
+        '<label>作品名称（图片下方 / 正在展示里显示）</label>'+
+        '<input type="text" class="f-alt" value="'+(p.alt||'').replace(/"/g,'&quot;')+'" placeholder="如：Fate · Saber">'+
+        '<div class="row2"><div><label>原图路径</label><input type="text" class="f-src" value="'+(p.src||'').replace(/"/g,'&quot;')+'" placeholder="images/xxx.jpg"></div>'+
+        '<div><label>缩略图路径</label><input type="text" class="f-thumb" value="'+(p.thumb||'').replace(/"/g,'&quot;')+'" placeholder="自动生成"></div></div>'+
+        '<div class="ph-tools">'+
+          '<span class="btn line sm file-btn">上传 / 替换图片<input type="file" class="f-file" accept="image/*"></span>'+
+        '</div>'+
+        '<p class="hint" style="margin:6px 0 0">上传后自动更新缩略图与原图路径。</p>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+function renderPhotos(photos){
+  var box=$('#photosContainer');
+  box.innerHTML='';
+  (photos||[]).forEach(function(p,i){ box.insertAdjacentHTML('beforeend',photoRowHTML(p,i)); });
+  wirePhotoActions();
+  refreshMoveState();
+}
+function photoItems(){ return $$('#photosContainer .ph-item'); }
+function refreshMoveState(){
+  var items=photoItems();
+  items.forEach(function(item,i){
+    var btns=item.querySelectorAll('.arrow');
+    btns[0].disabled=(i===0); btns[1].disabled=(i===items.length-1);
+  });
+}
+function wirePhotoActions(){
+  $$('#photosContainer').addEventListener('click',function(e){
+    var btn=e.target.closest('[data-act]');
+    if(!btn) return;
+    var item=btn.closest('.ph-item');
+    var act=btn.getAttribute('data-act');
+    if(act==='del'){ item.remove(); refreshMoveState(); }
+    else{
+      var items=photoItems(), idx=items.indexOf(item);
+      var j=act==='up'?idx-1:idx+1;
+      if(j<0||j>=items.length) return;
+      if(act==='up') item.parentElement.insertBefore(item,items[j]);
+      else item.parentElement.insertBefore(items[j],item);
+      refreshMoveState();
     }
+  });
+  $$('#addPhotoBtn').addEventListener('click',function(){
+    var box=$('#photosContainer');
+    box.insertAdjacentHTML('beforeend',photoRowHTML({src:'',thumb:'',alt:''},photoItems().length));
+    refreshMoveState();
+  });
+  var bgFile=$('#customBgFile');
+  if(bgFile && !bgFile.dataset.wired){
+    bgFile.dataset.wired='1';
+    bgFile.addEventListener('change',function(){
+      var f=this.files[0];
+      if(!f) return;
+      uploadCustomBg(f);
+      this.value='';
+    });
+  }
+  var clearBtn=$('#bgClearBtn');
+  if(clearBtn && !clearBtn.dataset.wired){
+    clearBtn.dataset.wired='1';
+    clearBtn.addEventListener('click',function(){
+      $('#customBgImage').value='';
+      var p=$('#customBgPreview'); p.style.display='none'; p.removeAttribute('src');
+    });
+  }
+  var sv=$('#saveBtn');
+  if(sv && !sv.dataset.wired){ sv.dataset.wired='1'; sv.addEventListener('click',saveData); }
+  var cont=$('#photosContainer');
+  if(cont && !cont.dataset.wired){ cont.dataset.wired='1'; cont.addEventListener('click',photoContainerClick); }
+}
+function photoContainerClick(e){
+  var btn=e.target.closest('[data-act]');
+  if(!btn) return;
+  var item=btn.closest('.ph-item');
+  var act=btn.getAttribute('data-act');
+  if(act==='del'){ item.remove(); refreshMoveState(); }
+  else{
+    var items=photoItems(), idx=items.indexOf(item);
+    var j=act==='up'?idx-1:idx+1;
+    if(j<0||j>=items.length) return;
+    if(act==='up') item.parentElement.insertBefore(item,items[j]);
+    else item.parentElement.insertBefore(items[j],item);
+    refreshMoveState();
+  }
+}
+function uploadCustomBg(file){
+  setStatus('正在上传背景图…','info');
+  var reader=new FileReader();
+  reader.onload=function(){
+    uploadBase64ToRepo(reader.result.split(',')[1], IMAGES_PATH+'bg_'+Date.now()+'_'+file.name.replace(/\s+/g,'_'))
+      .then(function(path){
+        $('#customBgImage').value=path;
+        var p=$('#customBgPreview'); p.src=path; p.style.display='block';
+        setStatus('背景图上传成功 ✅ 记得点“保存所有修改”','ok');
+      })
+      .catch(function(e){ setStatus('❌ 背景图上传失败: '+e.message,'err'); });
+  };
+  reader.readAsDataURL(file);
+}
 
-    async function uploadCustomBg() {
-      const fileInput = document.getElementById('customBgFile');
-      const file = fileInput.files[0];
-      if (!file) return alert('请先选择一张图片');
-      const statusEl = document.getElementById('status');
-      statusEl.textContent = '正在上传背景图...';
-      statusEl.className = 'status-info';
-      try {
-        const bgBlob = await compressImage(file, 1920, 0.85);
-        const reader = new FileReader();
-        const base64 = await new Promise((resolve, reject) => {
-          reader.onload = () => resolve(reader.result.split(',')[1]);
-          reader.onerror = reject;
-          reader.readAsDataURL(bgBlob);
-        });
-        const cleanName = 'bg_' + Date.now() + '.webp';
-        const path = IMAGES_PATH + cleanName;
-        await uploadBase64ToRepo(base64, path);
-        document.getElementById('customBgImage').value = path;
-        document.getElementById('customBgPreview').src = path;
-        document.getElementById('customBgPreview').style.display = 'block';
-        statusEl.textContent = '背景图上传成功！记得保存。';
-        statusEl.className = 'status-success';
-        fileInput.value = '';
-      } catch (e) {
-        statusEl.textContent = '❌ 上传失败: ' + e.message;
-        statusEl.className = 'status-error';
+/* ---------- GitHub 上传 ---------- */
+function uploadBase64ToRepo(base64,path){
+  var body={message:'上传图片 '+path,content:base64,branch:BRANCH};
+  return fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+path+'?ref='+BRANCH,{headers:{Authorization:'token '+token}})
+    .then(function(r){ return r.ok?r.json():Promise.reject(new Error('检查失败')); })
+    .then(function(ex){ if(ex&&ex.sha) body.sha=ex.sha; return body; })
+    .catch(function(){ return body; })
+    .then(function(payload){
+      return fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+path,{
+        method:'PUT',
+        headers:{Authorization:'token '+token,'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      }).then(function(r){ if(!r.ok) return r.json().then(function(d){ throw new Error('上传失败 ('+r.status+') '+d.message); }); return r.json(); })
+      .then(function(data){ return data.content.path; });
+    });
+}
+function compressImage(file,maxDimension,quality){
+  return new Promise(function(resolve,reject){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width,h=img.height;
+      if(w>maxDimension||h>maxDimension){
+        if(w>h){ h=Math.round(h*maxDimension/w); w=maxDimension; }
+        else{ w=Math.round(w*maxDimension/h); h=maxDimension; }
       }
-    }
+      var cv=document.createElement('canvas');
+      cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      cv.toBlob(function(blob){ blob?resolve(blob):reject(new Error('压缩失败')); },'image/webp',quality);
+    };
+    img.onerror=reject;
+    img.src=URL.createObjectURL(file);
+  });
+}
+function uploadPhotoFile(file){
+  var nameBase=file.name.replace(/\s+/g,'_').replace(/\.[^.]+$/,'')+'_'+Date.now();
+  var need=file.size>40*1024*1024;
+  var ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+  function run(mainBlob,ext2){
+    return new Promise(function(res,rej){
+      var r=new FileReader();
+      r.onload=function(){
+        uploadBase64ToRepo(r.result.split(',')[1], IMAGES_PATH+nameBase+'.'+ext2)
+          .then(function(mainPath){
+            compressImage(file,400,0.62).then(function(thumbBlob){
+              var r2=new FileReader();
+              r2.onload=function(){
+                uploadBase64ToRepo(r2.result.split(',')[1], IMAGES_PATH+'thumb_'+nameBase+'.webp')
+                  .then(function(thumbPath){ res({mainPath:mainPath,thumbPath:thumbPath}); })
+                  .catch(rej);
+              };
+              r2.onerror=rej;
+              r2.readAsDataURL(thumbBlob);
+            }).catch(rej);
+          }).catch(rej);
+      };
+      r.onerror=rej;
+      r.readAsDataURL(mainBlob);
+    });
+  }
+  if(need) return compressImage(file,2000,0.8).then(function(b){ return run(b,'webp'); });
+  return run(file,ext);
+}
 
-    async function uploadBase64ToRepo(base64, path) {
-      let sha = null;
-      try {
-        const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`, {
-          headers: { Authorization: `token ${token}` }
+/* ---------- 保存 ---------- */
+function collect(){
+  var photos=[];
+  photoItems().forEach(function(item){
+    var src=item.querySelector('.f-src').value.trim();
+    var thumb=item.querySelector('.f-thumb').value.trim();
+    if(src) photos.push({src:src,thumb:thumb||src,alt:item.querySelector('.f-alt').value.trim()});
+  });
+  return {
+    siteName:$('#siteName').value.trim(),
+    subtitle:$('#subtitle').value.trim(),
+    style:$('#style').value.trim(),
+    heroTitle2:$('#heroTitle2').value.trim(),
+    intro:$('#intro').value.trim(),
+    qq:$('#qq').value.trim(),
+    douyin:$('#douyin').value.trim(),
+    background:'static',
+    customBgImage:$('#customBgImage').value.trim(),
+    bgParticles:false,
+    photos:photos
+  };
+}
+function saveData(){
+  setStatus('正在处理并保存…','info');
+  var files=photoItems().map(function(item,i){ return {item:item,file:item.querySelector('.f-file').files[0],i:i}; })
+    .filter(function(o){ return o.file; });
+  (function next(){
+    if(!files.length) return pushData();
+    var o=files.shift();
+    setStatus('正在上传图片：'+o.file.name+' …','info');
+    uploadPhotoFile(o.file).then(function(res){
+      var src=o.item.querySelector('.f-src'), th=o.item.querySelector('.f-thumb'), img=o.item.querySelector('.thumb');
+      src.value=res.mainPath; th.value=res.thumbPath;
+      img.src=res.thumbPath; img.classList.remove('broken');
+      next();
+    }).catch(function(e){ setStatus('❌ 图片上传失败：'+e.message,'err'); });
+  })();
+  function pushData(){
+    var d=collect();
+    var jsonStr=JSON.stringify(d);
+    var bytes=new TextEncoder().encode(jsonStr);
+    var content=btoa(String.fromCharCode.apply(null,new Uint8Array(bytes)));
+    fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+DATA_PATH+'?ref='+BRANCH,{headers:{Authorization:'token '+token}})
+      .then(function(r){ if(!r.ok) throw new Error('获取文件信息失败 ('+r.status+')'); return r.json(); })
+      .then(function(fi){
+        return fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+DATA_PATH,{
+          method:'PUT',
+          headers:{Authorization:'token '+token,'Content-Type':'application/json'},
+          body:JSON.stringify({message:'更新网站内容',content:content,sha:fi.sha,branch:BRANCH})
         });
-        if (getRes.ok) { const existing = await getRes.json(); sha = existing.sha; }
-        else if (getRes.status !== 404) throw new Error(`检查文件状态失败 (${getRes.status})`);
-      } catch(e) { if (!e.message.includes('404')) throw e; }
-
-      const body = { message: `上传背景图`, content: base64, branch: BRANCH };
-      if (sha) body.sha = sha;
-      const putRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
-        method: 'PUT',
-        headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!putRes.ok) {
-        const errData = await putRes.json();
-        throw new Error(`上传失败 (${putRes.status}): ${errData.message}`);
-      }
-    }
-
-    // ---------- 登录 ----------
-    function saveToken() {
-      const t = document.getElementById('tokenInput').value.trim();
-      if (!t) return alert('请输入 Token');
-      token = t;
-      sessionStorage.setItem('gh_token', token);
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('editorSection').classList.remove('hidden');
-      loadData();
-    }
-    (function () {
-      const stored = sessionStorage.getItem('gh_token');
-      if (stored) {
-        token = stored;
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('editorSection').classList.remove('hidden');
-        loadData();
-      }
-    })();
-
-    async function loadData() {
-      try {
-        const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, {
-          headers: { Authorization: `token ${token}` }
-        });
-        if (!res.ok) throw new Error(`加载失败 (${res.status})`);
-        const file = await res.json();
-        const jsonStr = decodeURIComponent(escape(atob(file.content)));
-        currentData = JSON.parse(jsonStr);
-        fillForm(currentData);
-      } catch (e) { alert('加载数据出错: ' + e.message); }
-    }
-
-    function fillForm(d) {
-      document.getElementById('siteName').value = d.siteName || '';
-      document.getElementById('subtitle').value = d.subtitle || '';
-      document.getElementById('style').value = d.style || '';
-      document.getElementById('qq').value = d.qq || '';
-      document.getElementById('douyin').value = d.douyin || '';
-      document.getElementById('background').value = d.background || 'static';
-      document.getElementById('customBgImage').value = d.customBgImage || '';
-      document.getElementById('bgParticles').checked = d.bgParticles || false;
-      if (d.customBgImage) {
-        document.getElementById('customBgPreview').src = d.customBgImage;
-        document.getElementById('customBgPreview').style.display = 'block';
-      }
-      toggleCustomBg();
-      renderPhotos(d.photos || []);
-    }
-
-    // ---------- 作品列表 ----------
-    function renderPhotos(photos) {
-      const container = document.getElementById('photosContainer');
-      container.innerHTML = '';
-      photos.forEach((p, i) => {
-        const div = document.createElement('div'); div.className = 'photo-item';
-        div.innerHTML = `
-          <img src="${p.thumb || p.src}" alt="" onerror="this.style.display='none'" style="max-height:100px;">
-          <label>缩略图</label>
-          <input type="text" class="photo-thumb" value="${p.thumb || ''}" placeholder="自动生成">
-          <label>原图路径</label>
-          <input type="text" class="photo-src" value="${p.src}">
-          <label>描述</label>
-          <input type="text" class="photo-alt" value="${p.alt || ''}">
-          <input type="file" class="photo-file" accept="image/*" data-index="${i}">
-          <button onclick="this.parentElement.remove()">删除</button>`;
-        container.appendChild(div);
-      });
-    }
-
-    function addPhoto() {
-      const container = document.getElementById('photosContainer');
-      const div = document.createElement('div'); div.className = 'photo-item';
-      div.innerHTML = `
-        <img src="" alt="" style="display:none;">
-        <label>缩略图</label>
-        <input type="text" class="photo-thumb" value="" placeholder="上传后自动填充">
-        <label>原图路径</label>
-        <input type="text" class="photo-src" value="" placeholder="上传后自动填充">
-        <label>描述</label>
-        <input type="text" class="photo-alt" value="">
-        <input type="file" class="photo-file" accept="image/*">
-        <button onclick="this.parentElement.remove()">删除</button>`;
-      container.appendChild(div);
-    }
-
-    // ---------- 图片上传与缩略图 ----------
-    // ⚠️ 修改缩略图尺寸和质量：改下面两个常量即可
-    const THUMB_WIDTH = 700;    // 缩略图最大宽度（像素）
-    const THUMB_QUALITY = 0.99;  // 缩略图质量（0-1，越大越清晰）
-
-    async function uploadImage(file) {
-      const needCompress = file.size > 40 * 1024 * 1024;
-      let mainBlob = file, ext = file.name.split('.').pop().toLowerCase();
-      if (needCompress) {
-        mainBlob = await compressImage(file, 2000, 0.8);
-        ext = 'webp';
-      }
-      // 生成缩略图（使用上面的常量）
-      const thumbBlob = await compressImage(file, THUMB_WIDTH, THUMB_QUALITY);
-      const mainPath = await uploadBlobToRepo(mainBlob, file.name, ext);
-      const thumbPath = await uploadBlobToRepo(thumbBlob, 'thumb_' + file.name, 'webp');
-      return { mainPath, thumbPath };
-    }
-
-    async function uploadBlobToRepo(blob, originalName, forceExt) {
-      const reader = new FileReader();
-      return new Promise((resolve, reject) => {
-        reader.onload = async () => {
-          const base64 = reader.result.split(',')[1];
-          const cleanName = originalName.replace(/\s+/g, '_').replace(/\.[^/.]+$/, '');
-          const fileName = Date.now() + '_' + cleanName + '.' + forceExt;
-          const path = IMAGES_PATH + fileName;
-          try {
-            let sha = null;
-            try {
-              const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`, {
-                headers: { Authorization: `token ${token}` }
-              });
-              if (getRes.ok) { const existing = await getRes.json(); sha = existing.sha; }
-              else if (getRes.status !== 404) throw new Error(`检查文件状态失败 (${getRes.status})`);
-            } catch(e) { if (!e.message.includes('404')) throw e; }
-            const body = { message: `上传图片 ${fileName}`, content: base64, branch: BRANCH };
-            if (sha) body.sha = sha;
-            const putRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
-              method: 'PUT',
-              headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify(body)
-            });
-            if (!putRes.ok) { const errData = await putRes.json(); throw new Error(`上传失败 (${putRes.status}): ${errData.message}`); }
-            const data = await putRes.json();
-            resolve(data.content.path);
-          } catch (e) { reject(e); }
-        };
-        reader.readAsDataURL(blob);
-      });
-    }
-
-    function compressImage(file, maxDimension, quality) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = function() {
-          let width = img.width, height = img.height;
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
-            } else {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
-            }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width; canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob((blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('压缩失败'));
-          }, 'image/webp', quality);
-        };
-        img.onerror = reject;
-        img.src = URL.createObjectURL(file);
-      });
-    }
-
-    // ---------- 保存 ----------
-    async function saveData() {
-      const statusEl = document.getElementById('status');
-      statusEl.textContent = '⏳ 正在处理并保存...';
-      statusEl.className = 'status-info';
-
-      try {
-        const fileInputs = document.querySelectorAll('.photo-file');
-        for (const input of fileInputs) {
-          if (input.files.length > 0) {
-            const file = input.files[0];
-            statusEl.textContent = `正在上传图片：${file.name}...`;
-            const { mainPath, thumbPath } = await uploadImage(file);
-            const item = input.closest('.photo-item');
-            item.querySelector('.photo-src').value = mainPath;
-            item.querySelector('.photo-thumb').value = thumbPath;
-            const previewImg = item.querySelector('img');
-            if (previewImg) { previewImg.src = thumbPath; previewImg.style.display = 'block'; }
-            input.value = '';
-          }
-        }
-
-        const newData = {
-          siteName: document.getElementById('siteName').value.trim(),
-          subtitle: document.getElementById('subtitle').value.trim(),
-          style: document.getElementById('style').value.trim(),
-          qq: document.getElementById('qq').value.trim(),
-          douyin: document.getElementById('douyin').value.trim(),
-          background: document.getElementById('background').value,
-          customBgImage: document.getElementById('customBgImage').value.trim(),
-          bgParticles: document.getElementById('bgParticles').checked,
-          photos: []
-        };
-
-        const photoItems = document.querySelectorAll('.photo-item');
-        photoItems.forEach(item => {
-          const src = item.querySelector('.photo-src').value.trim();
-          const thumb = item.querySelector('.photo-thumb').value.trim();
-          if (src) {
-            newData.photos.push({
-              src: src,
-              thumb: thumb || src,
-              alt: item.querySelector('.photo-alt').value.trim()
-            });
-          }
-        });
-
-        const jsonStr = JSON.stringify(newData);
-        const encoder = new TextEncoder();
-        const dataBytes = encoder.encode(jsonStr);
-        const base64Content = btoa(String.fromCharCode(...new Uint8Array(dataBytes)));
-
-        const getRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}?ref=${BRANCH}`, {
-          headers: { Authorization: `token ${token}` }
-        });
-        if (!getRes.ok) throw new Error(`获取文件信息失败 (${getRes.status})`);
-        const fileInfo = await getRes.json();
-
-        const updateRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}`, {
-          method: 'PUT',
-          headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: '更新网站内容',
-            content: base64Content,
-            sha: fileInfo.sha,
-            branch: BRANCH
-          })
-        });
-
-        if (!updateRes.ok) {
-          const errData = await updateRes.json();
-          throw new Error(`保存失败 (${updateRes.status}): ${errData.message}`);
-        }
-
-        statusEl.textContent = '✅ 保存成功！网站将在 1-2 分钟内更新。';
-        statusEl.className = 'status-success';
-        currentData = newData;
-      } catch (e) {
-        statusEl.textContent = '❌ ' + e.message;
-        statusEl.className = 'status-error';
-        console.error(e);
-      }
-    }
-  </script>
+      })
+      .then(function(r){ if(!r.ok) return r.json().then(function(d){ throw new Error('保存失败 ('+r.status+') '+d.message); }); return r; })
+      .then(function(){ currentData=d; setStatus('✅ 保存成功！前台 1–2 分钟内自动更新。','ok'); })
+      .catch(function(e){ setStatus('❌ '+e.message,'err'); });
+  }
+}
+})();
+</script>
 </body>
 </html>
