@@ -484,6 +484,11 @@ body.mode-white #artBox.is-loading::after{border-color:rgba(0,0,0,.18);border-to
   #artBox.is-single .pcell img{max-height:70vh}
   .art-box{min-height:44vh}
 }
+/* ===== v2.5 等比放大：横图/并排竖图不受原图尺寸限制，撑满当前展示位 ===== */
+.pcell img{width:auto;height:auto;max-width:100%}
+#artBox:not(.is-single) .pcell.portrait img{width:100%;height:auto;max-width:none;max-height:min(90vh,1200px)}
+#artBox.is-single .pcell.portrait img{width:auto;height:auto;max-width:100%;max-height:min(88vh,1100px)}
+.pcell.landscape img{width:100%;height:auto;max-width:none;max-height:min(92vh,900px)}
 </style>
 </head>
 <body>
@@ -715,6 +720,17 @@ function loadData(){
         if(Array.isArray(d.groups)) state.groups=d.groups.filter(function(g){ return g && g.name; });
         state.fxEnabled=d.bgParticles!==false;
         if(Array.isArray(d.photos)) state.photos=d.photos.filter(function(p){ return p && p.src; });
+        // v2.5 首屏第一张优先展示「背景图那张照片」（若它也在作品列表里）
+        if(state.customBgImage){
+          var bgName=String(state.customBgImage).split('/').pop();
+          for(var pi=0;pi<state.photos.length;pi++){
+            if(String(state.photos[pi].src||'').split('/').pop()===bgName && pi>0){
+              var bgItem=state.photos.splice(pi,1)[0];
+              state.photos.unshift(bgItem);
+              break;
+            }
+          }
+        }
         // v2 背景三模式：black 纯黑 / white 纯白 / custom 自定义图（需后台传图）。访客选择存 localStorage
         var allow=['black','white']; if(state.customBgImage) allow.push('custom');
         state.bgMode = allow.indexOf(d.bgMode)>=0 ? d.bgMode : (state.customBgImage?'custom':'black');
@@ -973,12 +989,18 @@ function refreshUnit(){
       var fig=document.createElement('button');
       fig.type='button';
       fig.className='pcell';
+      if(stage.dirs[idx]) fig.classList.add(stage.dirs[idx].p?'portrait':'landscape');
       fig.setAttribute('data-pidx',idx);
       fig.setAttribute('aria-label','查看大图 '+(idx+1)+' / '+photos.length);
       var img=document.createElement('img');
       img.alt=p.title||'';
       img.decoding='async';
-      img.onload=function(){ if(!img.classList.contains('on')) img.classList.add('on'); done(); };
+      img.onload=function(){
+        var w=img.naturalWidth||0,h=img.naturalHeight||0;
+        if(w&&h) fig.classList.add(h>w?'portrait':'landscape');
+        if(!img.classList.contains('on')) img.classList.add('on');
+        done();
+      };
       img.onerror=function(){ img.classList.add('on'); done(); };
       img.src=heroSrc(p);   // v2.3 主展示：高清预览优先，无预览直接原图
       fig.appendChild(img);
