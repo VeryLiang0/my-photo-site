@@ -233,27 +233,65 @@ function api(url,opt){
   opt.headers=opt.headers||{};
   opt.headers['Authorization']='token '+token;
   return fetch(url,opt).then(function(r){
-    if(!r.ok) return r.json().then(function(d){ throw new Error((d&&d.message)||('HTTP '+r.status)); }).catch(function(e){ if(e instanceof Error) throw e; throw new Error('HTTP '+r.status); });
+    if(!r.ok) return r.json().then(function(d){
+      var m=(d&&d.message)||('HTTP '+r.status);
+      if(r.status===401) m='登录已失效：Token 无效或已过期（Bad credentials），请刷新页面后重新粘贴 Token 登录';
+      else if(r.status===403) m='权限不足或触发限流（HTTP 403）：请确认 Token 勾选了 repo 或 Contents 写权限';
+      throw new Error(m);
+    }).catch(function(e){ if(e instanceof Error) throw e; throw new Error('HTTP '+r.status); });
     return r.status===204?null:r.json();
   });
 }
 function ghBase(){ return 'https://api.github.com/repos/'+OWNER+'/'+REPO; }
 function fileMeta(path){ return api(ghBase()+'/contents/'+path+'?ref='+BRANCH); }
 
-/* ---------- 登录 ---------- */
+/* ---------- 登录（立即校验 token 有效性与仓库写权限） ---------- */
+var currentLogin='';
+function verifyToken(t){
+  return fetch('https://api.github.com/user',{headers:{'User-Agent':'dsh','Accept':'application/vnd.github+json','Authorization':'token '+t}})
+    .then(function(r){
+      if(r.status===401) return Promise.reject(new Error('Token 无效或已过期（Bad credentials）。请到 GitHub Settings → Developer settings → Personal access tokens 重新生成并粘贴。'));
+      if(r.status===403) return Promise.reject(new Error('触发限流或权限不足（HTTP 403）：请稍后再试，或确认 Token 有效。'));
+      if(!r.ok) return Promise.reject(new Error('Token 校验失败（HTTP '+r.status+'）'));
+      return r.json().then(function(u){ return u.login||''; });
+    })
+    .then(function(login){
+      return fetch('https://api.github.com/repos/'+OWNER+'/'+REPO,{headers:{'User-Agent':'dsh','Accept':'application/vnd.github+json','Authorization':'token '+t}})
+        .then(function(r){ return r.ok?r.json():null; })
+        .then(function(repo){
+          if(repo && repo.permissions && repo.permissions.push===false){
+            return Promise.reject(new Error('Token 登录账号 '+login+' 对该仓库只有只读权限。需要重新生成 Token 并勾选 repo（或 Contents 读写）权限。'));
+          }
+          return login;
+        });
+    });
+}
 $('#loginBtn').addEventListener('click',function(){
   var t=$('#tokenInput').value.trim();
   if(!t) return alert('请输入 Token');
-  token=t; sessionStorage.setItem('gh_token',t);
-  enter();
+  var btn=this, old=btn.textContent;
+  btn.disabled=true; btn.textContent='正在校验 Token…';
+  verifyToken(t).then(function(login){
+    token=t; currentLogin=login; sessionStorage.setItem('gh_token',t);
+    btn.disabled=false; btn.textContent=old;
+    enter();
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent=old;
+    alert('登录失败：'+e.message);
+  });
 });
-(function(){ var t=sessionStorage.getItem('gh_token'); if(t){ token=t; enter(); } })();
+(function(){
+  var t=sessionStorage.getItem('gh_token');
+  if(!t) return;
+  verifyToken(t).then(function(login){ token=t; currentLogin=login; enter(); })
+    .catch(function(){ sessionStorage.removeItem('gh_token'); });
+})();
 
 function enter(){
   $('#loginSection').style.display='none';
   $('#editorSection').style.display='block';
   $('#savebar').style.display='block';
-  setStatus('正在读取仓库数据…','info');
+  setStatus((currentLogin?('已登录：'+currentLogin+' · '):'')+'正在读取仓库数据…','info');
   loadData();
 }
 function setStatus(msg,cls){
