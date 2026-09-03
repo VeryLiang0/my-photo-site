@@ -180,10 +180,8 @@ body.drawer-open #burger span:nth-child(3){top:18px;transform:rotate(-45deg)}
 .mcell .ph img{height:clamp(190px,25vh,330px);width:auto;max-width:min(46vw,420px);object-fit:contain;margin:0 auto;
   opacity:.94;transition:opacity .35s,transform .6s var(--ease)}
 .mcell:hover .ph img{opacity:1;transform:scale(1.02)}
-.mcell figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:0 2px}
-.mcell figcaption span{font-family:var(--kai);font-size:13.5px;letter-spacing:.14em;color:rgba(255,255,255,.85)}
-.mcell figcaption i{font-style:normal;font-family:var(--num);font-size:10.5px;color:rgba(255,255,255,.4);letter-spacing:.14em}
-.mcell:hover figcaption span{color:#fff}
+.mcell figcaption{display:flex;justify-content:center;align-items:baseline;padding:0 2px}
+.mcell figcaption i{font-style:normal;font-family:var(--num);font-size:10.5px;color:rgba(255,255,255,.35);letter-spacing:.14em}
 .empty{text-align:center;padding:56px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;letter-spacing:.12em;font-size:14.5px}
 .empty a{color:var(--txt);text-decoration:underline;text-underline-offset:4px}
 
@@ -241,7 +239,7 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
 .lb-arrow svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:1.5}
 #lbPrev{left:max(12px,calc((100vw - min(1240px,94vw))/2 - 46px))}
 #lbNext{right:max(12px,calc((100vw - min(1240px,94vw))/2 - 46px))}
-.lb-bottom{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:20px;width:min(1240px,94vw);padding:14px 6px 0}
+.lb-bottom{position:relative;z-index:5;display:flex;align-items:center;justify-content:flex-end;width:min(1240px,94vw);padding:14px 6px 0}
 .lb-caption{font-family:var(--kai);font-size:16px;letter-spacing:.16em}
 .lb-count{font-family:var(--num);color:rgba(255,255,255,.55);font-size:12.5px;letter-spacing:.2em;white-space:nowrap}
 .lb-count b{color:#fff;font-weight:400}
@@ -348,7 +346,7 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
   <button id="ftMusic" aria-label="播放背景音乐" title="播放背景音乐">
     <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
   </button>
-  <button id="ftBg" aria-label="背景跟随作品切换" title="背景：跟随作品">
+  <button id="ftBg" aria-label="切换背景：自定义图 / 纯黑" title="背景切换">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="15.5" cy="8.5" r="1.6"/></svg>
   </button>
 </div>
@@ -388,10 +386,6 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
         <h1 class="reveal in d1"><span id="siteName">小林花花</span><br><span class="thin" id="heroTitle2">视觉作品集</span></h1>
         <p class="lead reveal in d2" id="subtitle">二次元人像摄影师</p>
         <p class="desc reveal in d2" id="introText">专注<span style="color:#fff" id="styleEm">战斗系</span>人像创作——棚拍 · 合成 · 后期。收录近年 COS 摄影与合成作品，欢迎交流约拍。</p>
-        <div class="now-bar reveal in d3" id="nowBar">
-          <span class="pulse" aria-hidden="true"></span>
-          <span>正在展示</span><b id="nowTitle">作品</b><i id="nowIdx">01/12</i>
-        </div>
         <div class="hero-chips reveal in d3">
           <span class="chip solid" id="styleChip"><span id="styleText">战斗系</span></span>
           <span class="chip">作品 <b id="photoCount" class="num" style="color:#fff">0</b> 幅</span>
@@ -512,7 +506,6 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
     <svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6"/></svg>
   </button>
   <div class="lb-bottom">
-    <div class="lb-caption" id="lbCaption"></div>
     <div class="lb-count" id="lbCount"><b>0</b> / 0</div>
   </div>
   <div class="lb-hint"><span><kbd>←</kbd><kbd>→</kbd> 切换</span><span><kbd>Esc</kbd> 关闭</span></div>
@@ -527,7 +520,7 @@ function $$(s,c){ return Array.prototype.slice.call((c||document).querySelectorA
 
 var state = {
   siteName:'小林花花', subtitle:'', style:'', heroTitle2:'', intro:'', qq:'', douyin:'',
-  customBgImage:'', musicUrl:'', bgMode:'auto', photos:[], idx:0, open:false
+  customBgImage:'', musicUrl:'', bgMode:'black', photos:[], idx:0, open:false
 };
 
 function loadData(){
@@ -546,17 +539,45 @@ function loadData(){
         state.customBgImage=d.customBgImage||'';
         state.musicUrl=d.musicUrl||'';
         if(Array.isArray(d.photos)) state.photos=d.photos.filter(function(p){ return p && p.src; });
-        // 默认背景：后台设置了自定义背景 → 默认 custom；否则跟随作品；访客选择存 localStorage
-        state.bgMode='auto';
-        if(state.customBgImage) state.bgMode='custom';
-        try{ var saved=localStorage.getItem('photo_bgMode'); if(saved==='custom'||saved==='auto') state.bgMode=saved; }catch(e){}
-        if(state.bgMode==='custom' && !state.customBgImage) state.bgMode='auto';
+        // 默认背景：后台传了自定义背景 → custom（显示自定义图）；没传 → black（纯黑）。访客选择存 localStorage
+        state.bgMode = state.customBgImage ? 'custom' : 'black';
+        try{ var saved=localStorage.getItem('photo_bgMode'); if(saved==='custom'||saved==='black') state.bgMode=saved; }catch(e){}
+        if(state.bgMode==='custom' && !state.customBgImage) state.bgMode='black';
       }
       renderAll();
     });
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function thumbOf(p){ return p.thumb || p.src; }
+
+/* ===== jsDelivr CDN 加速：把仓库相对路径转成 cdn.jsdelivr.net 地址 ===== */
+var CDN='https://cdn.jsdelivr.net/gh/VeryLiang0/my-photo-site@main/';
+function cdn(path){
+  if(!path) return '';
+  if(/^https?:/.test(path)) return path;                 // 已是完整地址则原样
+  var seg=String(path).replace(/^\.\//,'').split('/').map(function(s){ return encodeURIComponent(s); });
+  return CDN+seg.join('/');
+}
+/* 给 <img> 挂 CDN 失败回退：jsDelivr 单文件超 20MB 时会失败，自动换回相对路径(GitHub Pages) */
+function bindCdnImg(img,fallbackPath){
+  if(!img) return;
+  img.addEventListener('error',function h(){
+    var s=img.getAttribute('src')||'';
+    if(s.indexOf('cdn.jsdelivr.net')>-1 && fallbackPath){
+      img.removeEventListener('error',h);
+      img.src=fallbackPath;
+    }
+  });
+}
+/* 背景图走 CDN（CSS 无法监听 error，用 Image 探测回退） */
+function cdnBackground(el,path){
+  if(!el) return;
+  var u=cdn(path);
+  var probe=new Image();
+  probe.onload=function(){ el.style.backgroundImage="url('"+u+"')"; };
+  probe.onerror=function(){ el.style.backgroundImage=path?("url('"+path+"')"):''; };
+  probe.src=u;
+}
 
 function injectText(){
   var n=state.siteName||'小林花花';
@@ -592,6 +613,7 @@ function renderAll(){
   bindStatic();
   initFx();
   initTools();
+  applyBackdrop();
 }
 
 /* ===== 循环展示条（按原比例完整展示每张图） ===== */
@@ -599,14 +621,16 @@ function nodeFrom(p,i){
   var fig=document.createElement('figure');
   fig.className='mcell';
   fig.tabIndex=0; fig.setAttribute('role','button');
-  fig.setAttribute('aria-label','查看大图：'+(p.alt||('作品 '+(i+1))));
+  fig.setAttribute('aria-label','查看大图 '+(i+1));
   var ph=document.createElement('div'); ph.className='ph';
   var img=document.createElement('img');
   img.loading='lazy'; img.decoding='async';
-  img.src=thumbOf(p); img.alt=p.alt||'';
+  img.alt='';
+  img.src=cdn(thumbOf(p));
+  bindCdnImg(img,thumbOf(p));
   ph.appendChild(img); fig.appendChild(ph);
   var cap=document.createElement('figcaption');
-  cap.innerHTML='<span>'+esc(p.alt||'')+'</span><i>'+((i%photos.length)+1)+' / '+photos.length+'</i>';
+  cap.innerHTML='<i>'+((i%photos.length)+1)+' / '+photos.length+'</i>';
   fig.appendChild(cap);
   fig.addEventListener('click',function(){ openLightbox(i); });
   fig.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openLightbox(i); } });
@@ -644,13 +668,11 @@ function setStagePlaying(on){
   b.innerHTML=on?ICON_PAUSE:ICON_PLAY;
   b.setAttribute('aria-label',on?'暂停自动播放':'继续自动播放');
 }
-/* 背景来源：跟随当前作品(auto) 或 固定自定义背景(custom) */
+/* 背景来源：后台自定义背景图（走 CDN）；没传/纯黑模式 → 无背景图，hero 本身是深黑底 */
 function applyBackdrop(){
   var bd=$('#stageBackdrop'); if(!bd) return;
-  var src='';
-  if(state.bgMode==='custom' && state.customBgImage) src=state.customBgImage;
-  else if(photos[stage.i]) src=photos[stage.i].src;
-  bd.style.backgroundImage=src ? "url('"+src+"')" : '';
+  if(state.bgMode==='custom' && state.customBgImage) cdnBackground(bd,state.customBgImage);
+  else bd.style.backgroundImage='';
 }
 function stageTo(i){
   if(!photos.length) return;
@@ -658,23 +680,25 @@ function stageTo(i){
   var imgs=$$('#artPhotos img'), dots=$$('#railDots .rail-dot');
   for(var k=0;k<imgs.length;k++){
     if(k===stage.i){
-      if(!imgs[k].getAttribute('src')) imgs[k].setAttribute('src',photos[k].src);
+      if(!imgs[k].getAttribute('src')){
+        var tp=photos[k].src;
+        if(photos[k].thumb) tp=photos[k].thumb;
+        imgs[k].setAttribute('src',cdn(tp));
+        bindCdnImg(imgs[k],photos[k].src);
+      }
       imgs[k].classList.add('active');
     } else imgs[k].classList.remove('active');
   }
   for(var j=0;j<dots.length;j++) dots[j].classList.toggle('is-active',j===stage.i);
   var p=photos[stage.i];
-  $('#nowTitle').textContent=p.alt||('作品 '+(stage.i+1));
-  $('#nowIdx').textContent=pad2(stage.i+1)+'/'+pad2(photos.length);
   $('#sceneTag').textContent='SCENE '+pad2(stage.i+1)+' / PORTFOLIO';
   $('#railCount').innerHTML='<b>'+pad2(stage.i+1)+'</b>/'+pad2(photos.length);
-  applyBackdrop();
   preloadStage(1);
 }
 function preloadStage(d){
   if(!photos.length) return;
   var j=(stage.i+d+photos.length)%photos.length;
-  var im=new Image(); im.src=photos[j].src;
+  var im=new Image(); im.src=cdn(thumbOf(photos[j]));
 }
 function stageStart(){
   if(stage.timer||reduced) return;
@@ -689,12 +713,10 @@ function buildStage(){
   art.innerHTML=''; dots.innerHTML='';
   if(!photos.length){
     $('#sceneTag').textContent='SCENE 00 / EMPTY';
-    $('#nowBar').style.display='none';
     $('#artBar').style.display='none';
     $('#heroArtBox').style.display='none';
     return;
   }
-  $('#nowBar').style.display='';
   $('#artBar').style.display='';
   $('#heroArtBox').style.display='';
   $('#artBox').style.display='';
@@ -705,7 +727,7 @@ function buildStage(){
     art.appendChild(img);
     var d=document.createElement('button');
     d.type='button'; d.className='rail-dot'+(i===0?' is-active':'');
-    d.setAttribute('aria-label','前往第 '+(i+1)+' 幅作品');
+    d.setAttribute('aria-label','前往第 '+(i+1)+' 张');
     d.addEventListener('click',function(){ stageTo(i); });
     dots.appendChild(d);
   });
@@ -755,10 +777,18 @@ function showImage(){
   var p=photos[state.idx];
   lbImg.classList.remove('loaded','err');
   lbSpin.style.display='block';
+  var cdnFirst=true;
   lbImg.onload=function(){ lbSpin.style.display='none'; lbImg.classList.add('loaded'); };
-  lbImg.onerror=function(){ lbSpin.style.display='none'; lbImg.classList.add('err'); lbImg.alt='图片加载失败'; };
-  lbImg.src=p.src; lbImg.alt=p.alt||'作品大图';
-  $('#lbCaption').textContent=p.alt||'';
+  lbImg.onerror=function(){
+    if(cdnFirst && p.src){
+      cdnFirst=false;
+      lbImg.src=p.src;              // CDN 失败回退仓库相对路径
+      return;
+    }
+    lbSpin.style.display='none'; lbImg.classList.add('err'); lbImg.alt='图片加载失败';
+  };
+  lbImg.alt='';
+  lbImg.src=cdn(p.src);
   $('#lbCount').innerHTML='<b>'+(state.idx+1)+'</b> / '+photos.length;
   preload(1); preload(-1);
 }
@@ -770,7 +800,7 @@ function stepLightbox(d){
 function preload(d){
   if(!photos.length) return;
   var j=(state.idx+d+photos.length)%photos.length;
-  var im=new Image(); im.src=photos[j].src;
+  var im=new Image(); im.src=cdn(photos[j].src);  // 预载相邻原图
 }
 document.addEventListener('keydown',function(e){
   if(!state.open) return;
@@ -913,16 +943,16 @@ function syncBgBtn(){
   var bb=$('#ftBg'); if(!bb) return;
   if(state.bgMode==='custom'){
     bb.classList.add('on');
-    bb.setAttribute('aria-label','背景已固定为自定义图，点击切回跟随作品');
-    bb.title='背景：自定义图（点击跟随作品）';
+    bb.setAttribute('aria-label','背景显示自定义图，点击切换为纯黑');
+    bb.title='背景：自定义图（点击纯黑）';
   }else{
     bb.classList.remove('on');
-    bb.setAttribute('aria-label','背景跟随当前作品，点击切换为自定义背景');
-    bb.title='背景：跟随作品（点击固定自定义图）';
+    bb.setAttribute('aria-label','背景为纯黑，点击切换为自定义图');
+    bb.title='背景：纯黑（点击自定义图）';
   }
 }
 function toggleBgMode(){
-  state.bgMode = state.bgMode==='custom' ? 'auto' : 'custom';
+  state.bgMode = state.bgMode==='custom' ? 'black' : 'custom';
   try{ localStorage.setItem('photo_bgMode',state.bgMode); }catch(e){}
   syncBgBtn();
   applyBackdrop();
