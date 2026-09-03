@@ -161,7 +161,7 @@ textarea{resize:vertical;min-height:74px}
     </div>
 
     <div class="card">
-      <h2><span class="no">02</span> 首页背景 <span class="hint-t">留空则自动使用当前展示的作品图作背景</span></h2>
+      <h2><span class="no">02</span> 首页背景 <span class="hint-t">原片直传 · ≤24MB · 前台原色彩全屏铺展</span></h2>
       <div class="bg-box">
         <div class="col">
           <label>自定义背景图路径</label>
@@ -170,7 +170,7 @@ textarea{resize:vertical;min-height:74px}
             <span class="btn line sm file-btn">选择背景图<input type="file" id="customBgFile" accept="image/*"></span>
             <button class="btn line sm" id="bgClearBtn">清除</button>
           </div>
-          <p class="hint">说明：背景上传前会先检查仓库是否已存在同一文件，已存在则直接复用、不再重复上传。观众可在前台一键切换“跟随作品 / 自定义背景”。</p>
+          <p class="hint">说明：背景图以原片直传（不压缩、保留原色彩，前台全屏铺展，无滤镜），上限 24MB；超限才自动压缩到 ≤24MB。<br>观众可在前台一键切换“自定义背景 / 纯黑”。上传前会先检查仓库是否已存在同一文件，存在则直接复用。</p>
         </div>
         <img class="bg-preview" id="customBgPreview" alt="背景预览">
       </div>
@@ -423,8 +423,10 @@ function uploadBytes(name,bytes,sha){
 }
 
 /* ---------- 图片上传（主图 + 缩略图） ---------- */
-/* jsDelivr CDN 单文件约 20MB，后台图片统一压到 19MB 以内，保证 CDN 可服务 */
+/* jsDelivr CDN 单文件约 20MB：作品图统一压到 19MB 以内保证 CDN 可服务；
+   首页背景图按“原片直传”，独立上限 24MB */
 var MAX_UPLOAD_BYTES = 19*1024*1024;
+var MAX_BG_BYTES = 24*1024*1024;
 function loadImageObject(file){
   return new Promise(function(res,rej){
     var url=URL.createObjectURL(file), im=new Image();
@@ -443,24 +445,42 @@ function canvasToBlob(img,w,h,q){
     cv.toBlob(function(b){ b?res(b):rej(new Error('压缩失败')); },'image/webp',q);
   });
 }
-/* 渐进压缩：降质量→再降尺寸，直到 ≤maxBytes（输出 WebP） */
+/* 分段二分逼近压缩（画质优先）：
+   目标不是压到很小，而是“在 ≤maxBytes 前提下挑最高画质”：
+   先以原尺寸从高质量逐级二分找最大可用质量；全尺寸低质量仍超限，
+   再按档位降尺寸并重新二分，直到产物 ≤maxBytes（输出 WebP）。 */
+function canvasWebp(img,scale,q){
+  var W=img.naturalWidth||img.width, H=img.naturalHeight||img.height;
+  var w=Math.max(1,Math.round(W*scale)), h=Math.max(1,Math.round(H*scale));
+  return canvasToBlob(img,w,h,q);
+}
 function compressToLimit(file,maxBytes){
   return loadImageObject(file).then(function(img){
-    var W=img.naturalWidth||img.width, H=img.naturalHeight||img.height;
-    var scales=[1,.82,.66,.5,.36];
-    var quals=[.9,.8,.7,.6,.5,.4,.3];
-    function attempt(si,qi){
-      var sc=scales[Math.min(si,scales.length-1)];
-      var w=Math.round(W*sc), h=Math.round(H*sc);
-      var q=quals[Math.min(qi,quals.length-1)];
-      return canvasToBlob(img,w,h,q).then(function(b){
-        if(b.size<=maxBytes) return b;
-        if(qi+1<quals.length) return attempt(si,qi+1);
-        if(si+1<scales.length) return attempt(si+1,0);
-        return b;
+    var scaleSteps=[1,.92,.84,.76,.68,.6,.5,.42,.36];
+    var Q_HI=0.95, Q_LO=0.45, BISECT=6;
+    var si=0;
+    function tryScale(){
+      if(si>=scaleSteps.length){                     // 都超限 → 用最后档最低质量兜底
+        return canvasWebp(img,scaleSteps[scaleSteps.length-1],Q_LO);
+      }
+      var scale=scaleSteps[si];
+      var best=null;
+      var qLo=Q_LO, qHi=Q_HI;
+      function nextBisect(n){
+        if(n<=0){ si++; return best ? Promise.resolve(best) : tryScale(); }
+        var q=(qLo+qHi)/2;
+        return canvasWebp(img,scale,q).then(function(b){
+          if(b.size<=maxBytes){ best=b; qLo=q; }
+          else qHi=q;
+          return nextBisect(n-1);
+        });
+      }
+      return nextBisect(BISECT).then(function(){
+        if(best) return best;
+        si++; return tryScale();
       });
     }
-    return attempt(0,0);
+    return tryScale();
   });
 }
 function compressImage(file,maxDimension,quality){
@@ -482,7 +502,7 @@ function compressImage(file,maxDimension,quality){
   });
 }
 function uploadPhotoFile(file){
-  // 主图：≤19MB 原样上传保留画质；>19MB 渐进压缩为 WebP 直到 ≤19MB（jsDelivr CDN 可服务）
+  // 主图：≤19MB 原样不压；>19MB 分段二分压缩，在 ≤19MB 内挑最高画质（jsDelivr CDN 可服务）
   var base = cleanFileBase(file.name);
   var sp=splitName(base);
   var need = file.size > MAX_UPLOAD_BYTES;
@@ -758,9 +778,10 @@ function markMissing(idx){
 /* ---------- 背景图 / 音乐上传 ---------- */
 function uploadCustomBg(file){
   setStatus('正在检查并上传背景图…','info');
-  var need = file.size > MAX_UPLOAD_BYTES;
+  // 背景图 = 原片直传（保持原图画质与文件名）；超过 24MB 才压缩到 ≤24MB
+  var need = file.size > MAX_BG_BYTES;
   var prep = need
-    ? compressToLimit(file, MAX_UPLOAD_BYTES).then(function(b){ return {blob:b, name:'bg_'+splitName(cleanFileBase(file.name)).stem+'.webp'}; })
+    ? compressToLimit(file, MAX_BG_BYTES).then(function(b){ return {blob:b, name:splitName(cleanFileBase(file.name)).stem+'.webp'}; })
     : Promise.resolve({blob:file, name:cleanFileBase(file.name)});
   prep.then(function(o){
     return ensureRepoFile(o.blob,o.name);
@@ -768,7 +789,7 @@ function uploadCustomBg(file){
     .then(function(res){
       $('#customBgImage').value=res.path;
       var p=$('#customBgPreview'); p.src=res.path; p.style.display='block';
-      var szTip = need ? '（原文件超过 19MB，已压缩到 '+(res.path.split('/').pop()||'')+'）' : '';
+      var szTip = need ? '（原片超过 24MB，已压缩到 ≤24MB）' : '';
       setStatus(res.reused?'背景图已存在于仓库，直接复用 ✅（无需重新上传）':'背景图上传成功 ✅ '+szTip+' 记得点“保存所有修改”','ok');
     })
     .catch(function(e){ setStatus('❌ 背景图上传失败: '+e.message,'err'); });
