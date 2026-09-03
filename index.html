@@ -466,6 +466,24 @@ body.mode-white #artBox.is-loading::after{border-color:rgba(0,0,0,.18);border-to
   #artBox.is-single .pcell img{max-height:56vh}
   .pcell img{max-height:56vh}
 }
+/* ================= v2.4 更大画布：桌面大图占满首屏主要宽度 ================= */
+.pcell img{max-height:min(84vh,1000px)}
+#artBox.is-single .pcell img{max-height:min(88vh,1100px)}
+.art-box{min-height:min(50vh,540px)}
+@media(min-width:1280px){
+  .hero-inner{max-width:1760px;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:clamp(32px,3.4vw,80px)}
+  .hero-art{max-width:none;width:100%}
+  .hero h1{font-size:clamp(2.7rem,4.1vw,5rem)}
+  .hero .lead{font-size:clamp(1.05rem,1.5vw,1.25rem)}
+  .hero .desc{max-width:44ch}
+  .art-box{min-height:min(58vh,620px)}
+  #artPhotos{gap:clamp(16px,1.6vw,30px)}
+}
+@media(max-width:479px){
+  .pcell img{max-height:66vh}
+  #artBox.is-single .pcell img{max-height:70vh}
+  .art-box{min-height:44vh}
+}
 </style>
 </head>
 <body>
