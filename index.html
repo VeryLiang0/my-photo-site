@@ -489,6 +489,37 @@ body.mode-white #artBox.is-loading::after{border-color:rgba(0,0,0,.18);border-to
 #artBox:not(.is-single) .pcell.portrait img{width:100%;height:auto;max-width:none;max-height:min(90vh,1200px)}
 #artBox.is-single .pcell.portrait img{width:auto;height:auto;max-width:100%;max-height:min(88vh,1100px)}
 .pcell.landscape img{width:100%;height:auto;max-width:none;max-height:min(92vh,900px)}
+/* ================= v2.6 竖图尺寸收敛适中 · 控制钮固定大图左右两侧 ================= */
+#artBox{position:relative}
+#artPhotos{width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:clamp(12px,1.4vw,24px)}
+#artBox .pcell{display:flex;align-items:center;justify-content:center;padding:0;border:none;background:none;cursor:zoom-in}
+#artBox .pcell img{width:100%;height:100%;max-width:none;max-height:none;object-fit:contain}
+#artBox:not(.is-single) .pcell{flex:1 1 0;max-width:50%;height:min(64vh,760px)}
+#artBox.is-single .pcell{width:100%;height:min(70vh,860px)}
+.art-box{min-height:min(44vh,460px)}
+#artNav{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:space-between;pointer-events:none;padding:0 clamp(2px,1vw,14px)}
+#artNav .art-nav-side{display:flex;flex-direction:column;gap:10px;pointer-events:none}
+#artNav button{pointer-events:auto;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(10,10,10,.42);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:grid;place-items:center;opacity:.7;transition:.25s;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+#artNav button:hover{opacity:1;background:rgba(10,10,10,.7);border-color:#fff}
+#artNav button svg{width:17px;height:17px;fill:currentColor}
+body.mode-white #artNav button{color:#111;border-color:rgba(0,0,0,.3);background:rgba(255,255,255,.6)}
+body.mode-white #artNav button:hover{background:rgba(255,255,255,.88)}
+#railCount{position:absolute;top:10px;right:14px;z-index:6;font-family:var(--num);font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.9);background:rgba(0,0,0,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:5px 12px;border-radius:99px}
+#railCount b{color:#fff}
+body.mode-white #railCount{color:#111;background:rgba(255,255,255,.55)}
+body.mode-white #railCount b{color:#111}
+@media(max-width:920px){
+  #artBox:not(.is-single) .pcell{height:min(56vh,620px)}
+  #artBox.is-single .pcell{height:min(62vh,720px)}
+  #artNav button{width:38px;height:38px}
+  #artNav{padding:0 2px}
+  #railCount{top:6px;right:8px;padding:3px 9px;font-size:10px}
+}
+@media(max-width:479px){
+  #artBox:not(.is-single) .pcell{height:min(52vh,560px)}
+  #artBox.is-single .pcell{height:min(60vh,680px)}
+}
+.offer-card .note{white-space:pre-wrap}
 </style>
 </head>
 <body>
@@ -561,23 +592,26 @@ body.mode-white #artBox.is-loading::after{border-color:rgba(0,0,0,.18);border-to
         </div>
       </div>
 
-      <!-- 作品完整展示（竖图不裁切） -->
+      <!-- 作品完整展示：组合画布（大图左右两侧悬浮控制钮） -->
       <figure class="hero-art reveal in d3" id="heroArtBox">
         <div class="art-box" id="artBox">
           <div id="artPhotos"></div>
-        </div>
-        <!-- 组合画布控制条：上一组 / 播放 / 计数 / 下一组 -->
-        <div class="art-bar" id="artBar">
-          <button class="rail-btn" id="railPrev" aria-label="上一组作品">
-            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <button class="rail-btn" id="railPlay" aria-label="继续自动播放">
-            <svg viewBox="0 0 24 24"><path d="M8 5.2v13.6a1 1 0 0 0 1.53.85l11-6.8a1 1 0 0 0 0-1.7l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>
-          </button>
+          <div class="art-nav" id="artNav">
+            <span class="art-nav-side">
+              <button class="rail-btn" id="railPrev" aria-label="上一组作品">
+                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <button class="rail-btn" id="railPlay" aria-label="继续自动播放">
+                <svg viewBox="0 0 24 24"><path d="M8 5.2v13.6a1 1 0 0 0 1.53.85l11-6.8a1 1 0 0 0 0-1.7l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>
+              </button>
+            </span>
+            <span class="art-nav-side">
+              <button class="rail-btn" id="railNext" aria-label="下一组作品">
+                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </span>
+          </div>
           <div class="rail-count num" id="railCount"><b>01</b>/12</div>
-          <button class="rail-btn" id="railNext" aria-label="下一组作品">
-            <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-          </button>
         </div>
       </figure>
     </div>
@@ -1058,11 +1092,11 @@ function buildStage(){
   stage.dirs=[]; stage.starts=[]; stage.start=0; stage.renderedLen=0;
   if(!photos.length){
     $('#sceneTag').textContent='SCENE 00 / EMPTY';
-    $('#artBar').style.display='none';
+    $('#artNav').style.display='none';
     $('#heroArtBox').style.display='none';
     return;
   }
-  $('#artBar').style.display='';
+  $('#artNav').style.display='';
   $('#heroArtBox').style.display='';
   $('#artBox').style.display='';
   bindStageControls();
@@ -1084,7 +1118,9 @@ function bindStageControls(){
   });
   box.addEventListener('click',function(e){
     if(stage.suppressClick) return;
-    var c=e.target&&e.target.closest?e.target.closest('.pcell'):null;
+    var t=e.target;
+    if(t && t.closest && t.closest('.rail-btn')) return;   // 悬浮控制钮不触发大图
+    var c=t&&t.closest?t.closest('.pcell'):null;
     var idx=c?parseInt(c.getAttribute('data-pidx'),10):stage.start;
     if(idx>=0 && idx<photos.length) openLightbox(idx);
   });
@@ -1122,7 +1158,12 @@ function initLightbox(){
   // v2.2 灯箱手势：左右滑动切图 · 快速双击放大/还原（桌面用 dblclick）
   var sx=null;
   var lastTapT=0, lastTapX=-1, lastTapY=-1;
-  lbImg.addEventListener('dblclick',function(e){ e.stopPropagation(); toggleZoom(); });
+  // v2.6 放大感应扩大到整个灯箱大图区域（避开按钮）
+  lb.addEventListener('dblclick',function(e){
+    var t=e.target;
+    if(t && t.closest && t.closest('.lb-tool')) return;
+    toggleZoom();
+  });
   lb.addEventListener('touchstart',function(e){ if(e.touches.length===1) sx=e.touches[0].clientX; },{passive:true});
   lb.addEventListener('touchend',function(e){
     if(sx!==null){

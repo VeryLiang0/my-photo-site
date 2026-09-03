@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0b0b0b">
-<title>管理后台 · 小林花花</title>
+<meta name="robots" content="noindex,nofollow">
+<title>后台管理 · 小林花花</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000000'/%3E%3Ctext x='32' y='45' font-size='34' text-anchor='middle' fill='%23ffffff' font-family='Kaiti,serif'%3E%E8%8A%B1%3C/text%3E%3C/svg%3E">
 <style>
 :root{
@@ -124,6 +125,13 @@ textarea{resize:vertical;min-height:74px}
 .ph-fields .f-2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 .list-card{margin-bottom:14px}
 @media(max-width:760px){.ph-fields .f-3,.ph-fields .f-2{grid-template-columns:1fr}}
+/* v2.6 填写体验：更大的输入区与字号 */
+.ph-fields input[type=text],.ph-fields input[type=password],.ph-fields textarea,.ph-fields select{font-size:15px;line-height:1.7}
+.ph-fields textarea{min-height:76px;resize:vertical}
+textarea#notice{min-height:64px;font-size:15px}
+textarea#pricingNote{min-height:64px;font-size:15px}
+.o-title,.o-price{font-size:15px !important}
+@media(max-width:760px){.ph-fields .f-2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -167,8 +175,8 @@ textarea{resize:vertical;min-height:74px}
         <div><label>QQ 号</label><input type="text" id="qq" placeholder="如：884031786"></div>
         <div><label>抖音号（可编辑）</label><input type="text" id="douyin" placeholder="抖音搜索的账号，如 yansheng7000"></div>
       </div>
-      <label>顶部公告（留空则不显示）</label>
-      <input type="text" id="notice" placeholder="如：7 月排单中，急单请提前一周预约">
+      <label>顶部公告（前台顶栏展示 · 留空则不显示 · 可换行）</label>
+      <textarea id="notice" rows="2" placeholder="如：7 月排单中，急单请提前一周预约">
       <div class="cfg-row">
         <div>
           <label>默认背景模式（访客仍可右下角切换）</label>
@@ -179,9 +187,8 @@ textarea{resize:vertical;min-height:74px}
           </select>
         </div>
         <div>
-          <label>报价区补充说明（可选）</label>
-          <input type="text" id="pricingNote" placeholder="如：定金 30% / 出片 7 天内">
-        </div>
+          <label>报价区补充说明（可选 · 可多行）</label>
+          <textarea id="pricingNote" rows="2" placeholder="如：定金 30% / 出片 7 天内">
       </div>
       <label class="switch"><input type="checkbox" id="fxEnabled" checked> 开启首页萤火虫氛围光效（暖黄 · 后台关闭后前台不渲染）</label>
     </div>
@@ -841,11 +848,12 @@ function offerRowHTML(o,i){
       '<button class="del" data-act="del">删除</button>'+
     '</div>'+
     '<div class="ph-body"><div class="ph-fields">'+
-      '<div class="f-3">'+
+      '<div class="f-2">'+
         '<div><label>套餐名</label><input type="text" class="o-title" value="'+hx(o.title||'')+'" placeholder="如：棚拍 · 单人"></div>'+
-        '<div><label>价格</label><input type="text" class="o-price" value="'+hx(o.price||'')+'" placeholder="如：299 原价399"></div>'+
-        '<div><label>说明 / 活动（可选）</label><input type="text" class="o-note" value="'+hx(o.note||'')+'" placeholder="如：含后期精修 · 7 月活动立减 100"></div>'+
+        '<div><label>价格（可写“活动价 199 原价299”）</label><input type="text" class="o-price" value="'+hx(o.price||'')+'" placeholder="如：299 原价399"></div>'+
       '</div>'+
+      '<label>说明 / 活动（多行展示，可含换行）</label>'+
+      '<textarea class="o-note" rows="3" placeholder="如：含后期精修 · 7 月活动立减 100">'+hx(o.note||'')+'</textarea>'+
     '</div></div>'+
   '</div>';
 }
