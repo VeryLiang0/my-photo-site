@@ -104,6 +104,8 @@ body.drawer-open #burger span:nth-child(3){top:18px;transform:rotate(-45deg)}
 .hero{position:relative;min-height:100svh;background:#0b0b0b;color:#fff;display:flex;align-items:center;overflow:hidden}
 .stage-backdrop{position:absolute;inset:0;background:#0b0b0b center/cover no-repeat;opacity:.34;
   filter:blur(46px) grayscale(1) brightness(.62) contrast(1.08);transform:scale(1.12);transition:background-image 1.2s}
+/* 自定义背景 = 原片：保留原色彩、无模糊滤镜、全屏铺展 */
+.stage-backdrop.raw{opacity:1;filter:none;transform:none}
 .stage-veil{position:absolute;inset:0;pointer-events:none;background:
   linear-gradient(100deg,rgba(11,11,11,.9) 0%,rgba(11,11,11,.55) 46%,rgba(11,11,11,.12) 74%),
   linear-gradient(0deg,rgba(11,11,11,.7) 0%,transparent 30%,transparent 74%,rgba(11,11,11,.85) 100%)}
@@ -671,8 +673,13 @@ function setStagePlaying(on){
 /* 背景来源：后台自定义背景图（走 CDN）；没传/纯黑模式 → 无背景图，hero 本身是深黑底 */
 function applyBackdrop(){
   var bd=$('#stageBackdrop'); if(!bd) return;
-  if(state.bgMode==='custom' && state.customBgImage) cdnBackground(bd,state.customBgImage);
-  else bd.style.backgroundImage='';
+  if(state.bgMode==='custom' && state.customBgImage){
+    bd.classList.add('raw');
+    cdnBackground(bd,state.customBgImage);
+  }else{
+    bd.classList.remove('raw');
+    bd.style.backgroundImage='';
+  }
 }
 function stageTo(i){
   if(!photos.length) return;
@@ -681,9 +688,7 @@ function stageTo(i){
   for(var k=0;k<imgs.length;k++){
     if(k===stage.i){
       if(!imgs[k].getAttribute('src')){
-        var tp=photos[k].src;
-        if(photos[k].thumb) tp=photos[k].thumb;
-        imgs[k].setAttribute('src',cdn(tp));
+        imgs[k].setAttribute('src',cdn(photos[k].src));
         bindCdnImg(imgs[k],photos[k].src);
       }
       imgs[k].classList.add('active');
@@ -698,7 +703,7 @@ function stageTo(i){
 function preloadStage(d){
   if(!photos.length) return;
   var j=(stage.i+d+photos.length)%photos.length;
-  var im=new Image(); im.src=cdn(thumbOf(photos[j]));
+  var im=new Image(); im.src=cdn(photos[j].src);
 }
 function stageStart(){
   if(stage.timer||reduced) return;
