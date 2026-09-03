@@ -74,16 +74,24 @@ textarea{resize:vertical;min-height:74px}
 .bg-preview{width:210px;height:118px;border-radius:8px;border:1px solid var(--line);object-fit:cover;display:none;background:#eee}
 .bg-box .col{flex:1;min-width:240px}
 
+/* 音频选择器 */
+.mu-box{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.mu-box .col{flex:1;min-width:240px}
+.mu-audio{width:250px;border-radius:8px;display:none;background:#fafaf7}
+
 /* 作品条目 */
 .ph-item{border:1px solid var(--line);border-radius:10px;background:#fcfcf9;margin-bottom:14px;overflow:hidden}
+.ph-item.broken{border-color:rgba(200,0,0,.5)}
 .ph-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .ph-head .idx{font-family:ui-monospace,monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;min-width:30px}
 .ph-head .move{display:flex;gap:6px}
 .arrow{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 8px;color:var(--txt2);font-size:13px}
 .arrow:hover:not(:disabled){border-color:#000;color:#000}
 .arrow:disabled{opacity:.3;cursor:not-allowed}
-.ph-head .name{font-family:var(--kai);font-size:14px;color:var(--txt);letter-spacing:.08em;margin-right:auto}
-.del{color:#b00;border:1px solid rgba(200,0,0,.25);background:#fff;border-radius:6px;padding:4px 10px;font-size:12.5px}
+.ph-head .name{font-family:var(--kai);font-size:14px;color:var(--txt);letter-spacing:.08em;margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
+.ph-head .miss-tag{font-size:11px;color:#b00;border:1px solid rgba(200,0,0,.3);border-radius:999px;padding:2px 9px;display:none}
+.ph-item.broken .miss-tag{display:inline-block}
+.ph-head .del{color:#b00;border:1px solid rgba(200,0,0,.25);background:#fff;border-radius:6px;padding:4px 10px;font-size:12.5px}
 .del:hover{background:#b00;color:#fff}
 .ph-body{display:grid;grid-template-columns:118px 1fr;gap:16px;padding:14px}
 .ph-body .thumb{width:118px;height:118px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#e9e9e3;display:block}
@@ -162,19 +170,43 @@ textarea{resize:vertical;min-height:74px}
             <span class="btn line sm file-btn">选择背景图<input type="file" id="customBgFile" accept="image/*"></span>
             <button class="btn line sm" id="bgClearBtn">清除</button>
           </div>
+          <p class="hint">说明：背景上传前会先检查仓库是否已存在同一文件，已存在则直接复用、不再重复上传。观众可在前台一键切换“跟随作品 / 自定义背景”。</p>
         </div>
         <img class="bg-preview" id="customBgPreview" alt="背景预览">
       </div>
-      <p class="hint">说明：当前主题为黑白简约风。背景建议使用大尺寸人像图；也可留空，让系统自动把“正在展示的作品”模糊成背景。</p>
     </div>
 
     <div class="card">
-      <h2><span class="no">03</span> 作品管理 <span class="hint-t">点 ⬆⬇ 可排序 · 首图即首页轮播第一张</span></h2>
+      <h2><span class="no">03</span> 背景音乐 <span class="hint-t">上传 mp3 · 前台右下角出现音符按钮</span></h2>
+      <div class="mu-box">
+        <div class="col">
+          <label>音乐文件路径</label>
+          <input type="text" id="musicUrl" placeholder="images/bgm.mp3（上传后自动填入，留空则不启用）">
+          <div class="ph-tools">
+            <span class="btn line sm file-btn">上传 mp3<input type="file" id="musicFile" accept="audio/mpeg,audio/*"></span>
+            <button class="btn line sm" id="musicClearBtn">清除音乐</button>
+          </div>
+          <p class="hint">支持 mp3（建议 ≤ 20MB）。上传前会检查仓库是否已存在同名同内容的文件，存在则跳过上传直接复用。<br>前台默认不自动播放（浏览器限制），访客点击音符按钮后循环播放。</p>
+        </div>
+        <div class="col" style="min-width:250px">
+          <label>试听</label>
+          <audio class="mu-audio" id="musicAudio" controls preload="none"></audio>
+          <p class="hint" id="musicMeta" style="display:none"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">04</span> 作品管理 <span class="hint-t">点 ⬆⬇ 可排序 · 首图即首页轮播第一张</span></h2>
       <div id="photosContainer"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
         <button class="btn black" id="addPhotoBtn">＋ 添加新作品</button>
+        <span class="btn line file-btn">⇪ 批量上传图片<input type="file" id="bulkFile" accept="image/*" multiple></span>
+        <button class="btn line" id="checkMissingBtn">🔍 检查失效图片</button>
       </div>
-      <p class="hint">每行可：修改名称（会显示在图片下方与“正在展示”里）· 上传/替换图片（自动压缩 + 生成缩略图）· 删除该条目。<br>支持 JPG / PNG / WEBP；单张超过 40MB 自动压缩为 WebP。</p>
+      <p class="hint">每行可：修改名称（会显示在图片下方与“正在展示”里）· 上传/替换图片（自动压缩 + 生成缩略图）· 删除该条目。<br>
+      上传前会先检查仓库（以及当前展示列表）是否已存在该图片：存在则直接复用路径、不再重复上传；保存/刷新时可自动清理引用已失效图片的作品条目。<br>
+      支持 JPG / PNG / WEBP；单张超过 40MB 自动压缩为 WebP。</p>
     </div>
   </div>
 </div>
@@ -196,6 +228,17 @@ var token='', currentData={};
 
 var $=function(s){ return document.querySelector(s); };
 var $$=function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+function api(url,opt){
+  opt=opt||{};
+  opt.headers=opt.headers||{};
+  opt.headers['Authorization']='token '+token;
+  return fetch(url,opt).then(function(r){
+    if(!r.ok) return r.json().then(function(d){ throw new Error((d&&d.message)||('HTTP '+r.status)); }).catch(function(e){ if(e instanceof Error) throw e; throw new Error('HTTP '+r.status); });
+    return r.status===204?null:r.json();
+  });
+}
+function ghBase(){ return 'https://api.github.com/repos/'+OWNER+'/'+REPO; }
+function fileMeta(path){ return api(ghBase()+'/contents/'+path+'?ref='+BRANCH); }
 
 /* ---------- 登录 ---------- */
 $('#loginBtn').addEventListener('click',function(){
@@ -219,151 +262,129 @@ function setStatus(msg,cls){
   el.textContent=msg;
 }
 
-/* ---------- 读取 ---------- */
-function loadData(){
-  fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+DATA_PATH+'?ref='+BRANCH,{headers:{Authorization:'token '+token}})
-    .then(function(r){ if(!r.ok) throw new Error('读取失败 ('+r.status+')'); return r.json(); })
-    .then(function(file){
-      currentData=JSON.parse(decodeURIComponent(escape(atob(file.content))));
-      fillForm(currentData);
-      setStatus('数据已读取 ✅ 修改后记得保存','ok');
+/* ================= 仓库文件存在性判定（去重上传核心） =================
+   判定口径：
+   1) 仓库已有同名文件（GitHub sha 与本地一致）→ 视为已上传，复用路径，不再 PUT；
+   2) 网站展示列表(photos) 已引用相同路径 → 视为已在用，不再重复添加/上传。
+   本地内容指纹：git blob sha-1 = sha1("blob "+len+"\0"+content)。 */
+var imageIndexCache=null;          // [{name,sha,path}]
+var noCrypto=false;
+try{ if(!window.crypto||!crypto.subtle||!crypto.subtle.digest) noCrypto=true; }catch(e){ noCrypto=true; }
+
+function hex(buf){
+  var b=new Uint8Array(buf), s='';
+  for(var i=0;i<b.length;i++){ s+=('0'+b[i].toString(16)).slice(-2); }
+  return s;
+}
+/* 返回 Promise<hex sha1> */
+function gitBlobSha(data){
+  var pre=new TextEncoder().encode('blob '+data.length+'\0');
+  var all=new Uint8Array(pre.length+data.length);
+  all.set(pre,0); all.set(data,pre.length);
+  return crypto.subtle.digest('SHA-1',all).then(hex);
+}
+function cleanFileBase(name){
+  return (name||'').replace(/\s+/g,'_').replace(/[\/:*?"<>|#%]/g,'_');
+}
+function splitName(name){
+  var i=name.lastIndexOf('.');
+  if(i<=0) return {stem:name, ext:''};
+  return {stem:name.slice(0,i), ext:name.slice(i+1).toLowerCase()};
+}
+/* 拉取 images 目录索引（含每个文件的 sha），一次请求即可离线判定 */
+function loadImageIndex(force){
+  if(imageIndexCache && !force) return Promise.resolve(imageIndexCache);
+  return api(ghBase()+'/contents/'+IMAGES_PATH+'?ref='+BRANCH)
+    .then(function(list){
+      if(!Array.isArray(list)) return [];
+      imageIndexCache=list.map(function(f){ return {name:f.name, sha:f.sha, path:f.path}; });
+      return imageIndexCache;
     })
-    .catch(function(e){ setStatus('❌ '+e.message,'err'); });
+    // 失败：返回 null（调用方据此跳过失效清理/去重判定，绝不误删）
+    .catch(function(){ return null; });
+}
+function nameInIndex(name){
+  if(!imageIndexCache) return null;
+  for(var i=0;i<imageIndexCache.length;i++) if(imageIndexCache[i].name===name) return imageIndexCache[i];
+  return null;
+}
+/* 已上传完成时把新文件加入内存索引，避免重复请求 */
+function rememberFile(name,sha,path){ if(imageIndexCache){ imageIndexCache.push({name:name,sha:sha||'',path:path||IMAGES_PATH+name}); } }
+
+/* 确保目录索引已加载（失败时保持 null，调用方视为“无法判定”，绝不清空） */
+function loadIndexIfNeeded(){
+  if(imageIndexCache!==null) return Promise.resolve(imageIndexCache);
+  return loadImageIndex().then(function(idx){ return idx; });
 }
 
-function fillForm(d){
-  $('#topName').textContent=d.siteName||'小林花花';
-  $('#siteName').value=d.siteName||'';
-  $('#subtitle').value=d.subtitle||'';
-  $('#style').value=d.style||'';
-  $('#heroTitle2').value=d.heroTitle2||'';
-  $('#intro').value=d.intro||'';
-  $('#qq').value=d.qq||'';
-  $('#douyin').value=d.douyin||'';
-  $('#customBgImage').value=d.customBgImage||'';
-  if(d.customBgImage){ var p=$('#customBgPreview'); p.src=d.customBgImage; p.style.display='block'; }
-  renderPhotos(d.photos||[]);
-}
-
-/* ---------- 作品列表 ---------- */
-function photoRowHTML(p,i){
-  return ''+
-  '<div class="ph-item" data-i="'+i+'">'+
-    '<div class="ph-head">'+
-      '<span class="idx">#'+String(i+1).padStart(2,'0')+'</span>'+
-      '<span class="move">'+
-        '<button class="arrow" data-act="up" title="上移" '+ (i===0?'disabled':'') +'>↑</button>'+
-        '<button class="arrow" data-act="down" title="下移" '+ (i===0?'disabled':'') +'>↓</button>'+
-      '</span>'+
-      '<span class="name">'+( (p.alt||'').slice(0,12)||'（未命名）')+'</span>'+
-      '<button class="del" data-act="del">删除</button>'+
-    '</div>'+
-    '<div class="ph-body">'+
-      '<img class="thumb" alt="" '+(p.thumb||p.src?'src="'+(p.thumb||p.src)+'"':'')+'>'+
-      '<div class="ph-fields">'+
-        '<label>作品名称（图片下方 / 正在展示里显示）</label>'+
-        '<input type="text" class="f-alt" value="'+(p.alt||'').replace(/"/g,'&quot;')+'" placeholder="如：Fate · Saber">'+
-        '<div class="row2"><div><label>原图路径</label><input type="text" class="f-src" value="'+(p.src||'').replace(/"/g,'&quot;')+'" placeholder="images/xxx.jpg"></div>'+
-        '<div><label>缩略图路径</label><input type="text" class="f-thumb" value="'+(p.thumb||'').replace(/"/g,'&quot;')+'" placeholder="自动生成"></div></div>'+
-        '<div class="ph-tools">'+
-          '<span class="btn line sm file-btn">上传 / 替换图片<input type="file" class="f-file" accept="image/*"></span>'+
-        '</div>'+
-        '<p class="hint" style="margin:6px 0 0">上传后自动更新缩略图与原图路径。</p>'+
-      '</div>'+
-    '</div>'+
-  '</div>';
-}
-function renderPhotos(photos){
-  var box=$('#photosContainer');
-  box.innerHTML='';
-  (photos||[]).forEach(function(p,i){ box.insertAdjacentHTML('beforeend',photoRowHTML(p,i)); });
-  wirePhotoActions();
-  refreshMoveState();
-}
-function photoItems(){ return $$('#photosContainer .ph-item'); }
-function refreshMoveState(){
-  var items=photoItems();
-  items.forEach(function(item,i){
-    var btns=item.querySelectorAll('.arrow');
-    btns[0].disabled=(i===0); btns[1].disabled=(i===items.length-1);
+/* 核心去重上传：同一字节流只往仓库写一次。
+   判定口径（对应需求）：a) 仓库已存在同名且内容指纹一致 → 复用不重传；
+   b) 仓库已有同名但内容不同 → 自动加短指纹另存；
+   c) 仓库里有内容一致但名字不同的历史文件 → 直接复用该路径。 */
+function uploadDedup(name,bytes){
+  return loadIndexIfNeeded().then(function(idx){
+    var shaP = noCrypto?Promise.resolve(null):gitBlobSha(bytes).catch(function(){ return null; });
+    return shaP.then(function(localSha){
+      var hit=nameInIndex(name);
+      if(hit && (!hit.sha || !localSha || hit.sha===localSha)){
+        return {path:IMAGES_PATH+name, reused:true};
+      }
+      if(hit && localSha && hit.sha && hit.sha!==localSha){
+        var sp=splitName(name);
+        name=sp.stem+'-'+localSha.slice(0,7)+(sp.ext?('.'+sp.ext):'');
+        hit=nameInIndex(name);
+        if(hit && (!hit.sha || hit.sha===localSha)){
+          return {path:IMAGES_PATH+name, reused:true};
+        }
+      }
+      // 同名不匹配时，再按内容指纹找历史文件
+      if(localSha && idx){
+        for(var i=0;i<idx.length;i++){
+          if(idx[i].sha && idx[i].sha===localSha){
+            return {path:idx[i].path||(IMAGES_PATH+idx[i].name), reused:true};
+          }
+        }
+      }
+      return uploadBytes(name,bytes).then(function(){ return {path:IMAGES_PATH+name,reused:false}; });
+    });
   });
 }
-function wirePhotoActions(){
-  var photoBox=$('#photosContainer');
-  if(photoBox && !photoBox.dataset.wired){ photoBox.dataset.wired='1'; photoBox.addEventListener('click',photoContainerClick); }
-  $('#addPhotoBtn').addEventListener('click',function(){
-    var box=$('#photosContainer');
-    box.insertAdjacentHTML('beforeend',photoRowHTML({src:'',thumb:'',alt:''},photoItems().length));
-    refreshMoveState();
+
+/* 上传（或复用）一个用户所选文件：返回 {path, reused} */
+function ensureRepoFile(file){
+  var cleaned=cleanFileBase(file.name);
+  var sp=splitName(cleaned);
+  var name = sp.ext ? (sp.stem+'.'+sp.ext) : cleaned;
+  return readAsBytes(file).then(function(bytes){
+    return uploadDedup(name,bytes);
   });
-  var bgFile=$('#customBgFile');
-  if(bgFile && !bgFile.dataset.wired){
-    bgFile.dataset.wired='1';
-    bgFile.addEventListener('change',function(){
-      var f=this.files[0];
-      if(!f) return;
-      uploadCustomBg(f);
-      this.value='';
-    });
-  }
-  var clearBtn=$('#bgClearBtn');
-  if(clearBtn && !clearBtn.dataset.wired){
-    clearBtn.dataset.wired='1';
-    clearBtn.addEventListener('click',function(){
-      $('#customBgImage').value='';
-      var p=$('#customBgPreview'); p.style.display='none'; p.removeAttribute('src');
-    });
-  }
-  var sv=$('#saveBtn');
-  if(sv && !sv.dataset.wired){ sv.dataset.wired='1'; sv.addEventListener('click',saveData); }
-
 }
-function photoContainerClick(e){
-  var btn=e.target.closest('[data-act]');
-  if(!btn) return;
-  var item=btn.closest('.ph-item');
-  var act=btn.getAttribute('data-act');
-  if(act==='del'){ item.remove(); refreshMoveState(); }
-  else{
-    var items=photoItems(), idx=items.indexOf(item);
-    var j=act==='up'?idx-1:idx+1;
-    if(j<0||j>=items.length) return;
-    if(act==='up') item.parentElement.insertBefore(item,items[j]);
-    else item.parentElement.insertBefore(items[j],item);
-    refreshMoveState();
-  }
+function readAsBytes(blob){
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onload=function(){ res(new Uint8Array(fr.result)); };
+    fr.onerror=rej;
+    fr.readAsArrayBuffer(blob);
+  });
 }
-function uploadCustomBg(file){
-  setStatus('正在上传背景图…','info');
-  var reader=new FileReader();
-  reader.onload=function(){
-    uploadBase64ToRepo(reader.result.split(',')[1], IMAGES_PATH+'bg_'+Date.now()+'_'+file.name.replace(/\s+/g,'_'))
-      .then(function(path){
-        $('#customBgImage').value=path;
-        var p=$('#customBgPreview'); p.src=path; p.style.display='block';
-        setStatus('背景图上传成功 ✅ 记得点“保存所有修改”','ok');
-      })
-      .catch(function(e){ setStatus('❌ 背景图上传失败: '+e.message,'err'); });
-  };
-  reader.readAsDataURL(file);
+function bytesToB64(bytes){
+  var s=''; var chunk=0x8000;
+  for(var i=0;i<bytes.length;i+=chunk){
+    s+=String.fromCharCode.apply(null,bytes.subarray(i,i+chunk));
+  }
+  return btoa(s);
+}
+function uploadBytes(name,bytes,sha){
+  var body={message:'上传图片 '+name, content:bytesToB64(bytes), branch:BRANCH};
+  if(sha) body.sha=sha;
+  return api(ghBase()+'/contents/'+IMAGES_PATH+name,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(data){
+      rememberFile(name,(data&&data.content&&data.content.sha)||'',data&&data.content&&data.content.path);
+      return data;
+    });
 }
 
-/* ---------- GitHub 上传 ---------- */
-function uploadBase64ToRepo(base64,path){
-  var body={message:'上传图片 '+path,content:base64,branch:BRANCH};
-  return fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+path+'?ref='+BRANCH,{headers:{Authorization:'token '+token}})
-    .then(function(r){ return r.ok?r.json():Promise.reject(new Error('检查失败')); })
-    .then(function(ex){ if(ex&&ex.sha) body.sha=ex.sha; return body; })
-    .catch(function(){ return body; })
-    .then(function(payload){
-      return fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+path,{
-        method:'PUT',
-        headers:{Authorization:'token '+token,'Content-Type':'application/json'},
-        body:JSON.stringify(payload)
-      }).then(function(r){ if(!r.ok) return r.json().then(function(d){ throw new Error('上传失败 ('+r.status+') '+d.message); }); return r.json(); })
-      .then(function(data){ return data.content.path; });
-    });
-}
+/* ---------- 图片上传（主图 + 缩略图） ---------- */
 function compressImage(file,maxDimension,quality){
   return new Promise(function(resolve,reject){
     var img=new Image();
@@ -383,33 +404,299 @@ function compressImage(file,maxDimension,quality){
   });
 }
 function uploadPhotoFile(file){
-  var nameBase=file.name.replace(/\s+/g,'_').replace(/\.[^.]+$/,'')+'_'+Date.now();
+  // 主图：<40MB 走原文件；≥40MB 自动压成 webp（去重依据始终是内容指纹）
   var need=file.size>40*1024*1024;
-  var ext=(file.name.split('.').pop()||'jpg').toLowerCase();
-  function run(mainBlob,ext2){
-    return new Promise(function(res,rej){
-      var r=new FileReader();
-      r.onload=function(){
-        uploadBase64ToRepo(r.result.split(',')[1], IMAGES_PATH+nameBase+'.'+ext2)
-          .then(function(mainPath){
-            compressImage(file,400,0.62).then(function(thumbBlob){
-              var r2=new FileReader();
-              r2.onload=function(){
-                uploadBase64ToRepo(r2.result.split(',')[1], IMAGES_PATH+'thumb_'+nameBase+'.webp')
-                  .then(function(thumbPath){ res({mainPath:mainPath,thumbPath:thumbPath}); })
-                  .catch(rej);
-              };
-              r2.onerror=rej;
-              r2.readAsDataURL(thumbBlob);
-            }).catch(rej);
-          }).catch(rej);
-      };
-      r.onerror=rej;
-      r.readAsDataURL(mainBlob);
+  var base = cleanFileBase(file.name);
+  var sp=splitName(base);
+  var targetExt = need ? 'webp' : (sp.ext||'jpg');
+  var mainName = sp.ext===targetExt ? (sp.stem+'.'+sp.ext) : (sp.stem+'.'+targetExt);
+  var proc = need
+    ? compressImage(file,2000,0.8)
+    : readAsBytes(file).then(function(b){ return new Blob([b],{type:file.type||'image/'+targetExt}); });
+
+  return proc.then(function(mainBlob){
+    return readAsBytes(mainBlob).then(function(bytes){
+      return uploadDedup(mainName,bytes).then(function(mainRes){
+        // 缩略图（webp 400px）：命名跟随“最终主图文件名”，避免同名不同图缩略图错配
+        var mainFile=(mainRes.path.split('/').pop()||mainName).replace(/\.(webp|jpe?g|png)$/i,'');
+        var thumbName='thumb_'+mainFile+'.webp';
+        return compressImage(file,400,0.62).then(function(thumbBlob){
+          return readAsBytes(thumbBlob).then(function(tb){
+            return uploadDedup(thumbName,tb).then(function(){
+              return {mainPath:mainRes.path, thumbPath:IMAGES_PATH+thumbName, reused:mainRes.reused};
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
+/* ---------- 读取 ---------- */
+function loadData(){
+  fileMeta(DATA_PATH)
+    .then(function(file){
+      currentData=JSON.parse(decodeURIComponent(escape(atob(file.content))));
+      // 预载仓库 images 目录索引，用于：去重判定 + 失效图片检查
+      loadImageIndex(true).then(function(idx){
+        if(!idx || !idx.length){ fillForm(currentData); setStatus('数据已读取 ✅（仓库图片目录为空或校验失败，已跳过失效检查）修改后记得保存','ok'); return; }
+        // 自动清理：展示列表里引用的图片在仓库中已不存在的条目（图片失效）
+        var cleaned=0;
+        if(currentData.photos && currentData.photos.length){
+          var aliveNames={};
+          idx.forEach(function(f){ aliveNames[f.name]=1; });
+          var kept=[];
+          currentData.photos.forEach(function(p){
+            if(!p || !p.src) return;
+            var fname=(p.src.split('/').pop()||'');
+            var ok = aliveNames[fname] ? true : false;
+            // 兼容历史记录：src 带时间戳前缀而仓库缺失时，尝试找同 stem 任意文件
+            if(!ok){
+              var stem=fname.replace(/^thumb_/,'').replace(/\.[^.]+$/,'');
+              ok = idx.some(function(f){ var n=f.name.replace(/\.[^.]+$/,''); return n===stem; });
+            }
+            if(ok) kept.push(p); else cleaned++;
+          });
+          if(cleaned){ currentData.photos=kept; }
+        }
+        if(imageIndexCache===null) imageIndexCache=idx;
+        fillForm(currentData);
+        if(cleaned) setStatus('已自动清理 '+cleaned+' 条引用失效图片的作品记录（图片在仓库中已不存在）。','err');
+        else setStatus('数据已读取 ✅ 图片已校验：仓库与展示列表引用一致。修改后记得保存','ok');
+      },function(){ fillForm(currentData); setStatus('数据已读取 ✅（图片目录校验失败，已跳过失效检查）修改后记得保存','ok'); });
+    })
+    .catch(function(e){ setStatus('❌ '+e.message,'err'); });
+}
+
+function fillForm(d){
+  $('#topName').textContent=d.siteName||'小林花花';
+  $('#siteName').value=d.siteName||'';
+  $('#subtitle').value=d.subtitle||'';
+  $('#style').value=d.style||'';
+  $('#heroTitle2').value=d.heroTitle2||'';
+  $('#intro').value=d.intro||'';
+  $('#qq').value=d.qq||'';
+  $('#douyin').value=d.douyin||'';
+  $('#customBgImage').value=d.customBgImage||'';
+  if(d.customBgImage){ var p=$('#customBgPreview'); p.src=d.customBgImage; p.style.display='block'; }
+  // 背景音乐
+  var mu=$('#musicUrl');
+  mu.value=d.musicUrl||'';
+  updateMusicPreview();
+  renderPhotos(d.photos||[]);
+}
+function updateMusicPreview(){
+  var url=$('#musicUrl').value.trim();
+  var a=$('#musicAudio');
+  if(url){ a.src=url; a.style.display='block'; }
+  else{ a.removeAttribute('src'); a.style.display='none'; }
+}
+
+/* ---------- 作品列表 ---------- */
+function photoRowHTML(p,i){
+  return ''+
+  '<div class="ph-item" data-i="'+i+'">'+
+    '<div class="ph-head">'+
+      '<span class="idx">#'+String(i+1).padStart(2,'0')+'</span>'+
+      '<span class="move">'+
+        '<button class="arrow" data-act="up" title="上移" '+ (i===0?'disabled':'') +'>↑</button>'+
+        '<button class="arrow" data-act="down" title="下移" '+ (i===0?'disabled':'') +'>↓</button>'+
+      '</span>'+
+      '<span class="name">'+( (p.alt||'').slice(0,16)||'（未命名）')+'</span>'+
+      '<span class="miss-tag">图片已失效</span>'+
+      '<button class="del" data-act="del">删除</button>'+
+    '</div>'+
+    '<div class="ph-body">'+
+      '<img class="thumb" alt="" '+(p.thumb||p.src?'src="'+(p.thumb||p.src)+'"':'')+'>'+
+      '<div class="ph-fields">'+
+        '<label>作品名称（图片下方 / 正在展示里显示）</label>'+
+        '<input type="text" class="f-alt" value="'+(p.alt||'').replace(/"/g,'&quot;')+'" placeholder="如：Fate · Saber">'+
+        '<div class="row2"><div><label>原图路径</label><input type="text" class="f-src" value="'+(p.src||'').replace(/"/g,'&quot;')+'" placeholder="images/xxx.jpg"></div>'+
+        '<div><label>缩略图路径</label><input type="text" class="f-thumb" value="'+(p.thumb||'').replace(/"/g,'&quot;')+'" placeholder="自动生成"></div></div>'+
+        '<div class="ph-tools">'+
+          '<span class="btn line sm file-btn">上传 / 替换图片<input type="file" class="f-file" accept="image/*"></span>'+
+        '</div>'+
+        '<p class="hint" style="margin:6px 0 0">选完点保存；若仓库已存在同一图片会自动复用，不再重复上传。</p>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+function renderPhotos(photos){
+  var box=$('#photosContainer');
+  box.innerHTML='';
+  (photos||[]).forEach(function(p,i){ box.insertAdjacentHTML('beforeend',photoRowHTML(p,i)); });
+  wirePhotoActions();
+  refreshMoveState();
+}
+function photoItems(){ return $$('#photosContainer .ph-item'); }
+function refreshMoveState(){
+  var items=photoItems();
+  items.forEach(function(item,i){
+    var btns=item.querySelectorAll('.arrow');
+    btns[0].disabled=(i===0); btns[1].disabled=(i===items.length-1);
+  });
+}
+function addPhotoRow(p){
+  var box=$('#photosContainer');
+  box.insertAdjacentHTML('beforeend',photoRowHTML(p||{src:'',thumb:'',alt:''},photoItems().length));
+  refreshMoveState();
+}
+function wirePhotoActions(){
+  var photoBox=$('#photosContainer');
+  if(photoBox && !photoBox.dataset.wired){ photoBox.dataset.wired='1'; photoBox.addEventListener('click',photoContainerClick); }
+  var addBtn=$('#addPhotoBtn');
+  if(addBtn && !addBtn.dataset.wired){ addBtn.dataset.wired='1'; addBtn.addEventListener('click',function(){ addPhotoRow(); }); }
+
+  // 批量上传：一次选多张 → 依次上传并加入列表
+  var bulk=$('#bulkFile');
+  if(bulk && !bulk.dataset.wired){
+    bulk.dataset.wired='1';
+    bulk.addEventListener('change',function(){
+      var files=Array.prototype.slice.call(this.files||[]);
+      this.value='';
+      if(!files.length) return;
+      setStatus('批量上传 '+files.length+' 张，正在逐个检查与上传…','info');
+      addPhotoBtnDisabled(true);
+      var reusedTotal=0;
+      (function next(i){
+        if(i>=files.length){
+          addPhotoBtnDisabled(false);
+          var msg='✅ 批量上传完成：'+files.length+' 张已加入列表（'+reusedTotal+' 张为仓库已有图片，自动复用未重复上传）。记得点“保存所有修改”';
+          if(!reusedTotal) msg='✅ 批量上传完成：'+files.length+' 张新图已加入列表。记得点“保存所有修改”';
+          setStatus(msg,'ok');
+          refreshMoveState();
+          return;
+        }
+        var f=files[i];
+        setStatus('批量上传 ('+(i+1)+'/'+files.length+') '+f.name+' …','info');
+        uploadPhotoFile(f).then(function(res){
+          if(res.reused) reusedTotal++;
+          addPhotoRow({src:res.mainPath,thumb:res.thumbPath,alt:splitName(cleanFileBase(f.name)).stem});
+          next(i+1);
+        }).catch(function(e){
+          setStatus('❌ 上传失败：'+f.name+' — '+e.message,'err');
+          addPhotoBtnDisabled(false);
+        });
+      })(0);
     });
   }
-  if(need) return compressImage(file,2000,0.8).then(function(b){ return run(b,'webp'); });
-  return run(file,ext);
+
+  // 检查失效图片：手动触发，标红仓库中不存在的条目
+  var ck=$('#checkMissingBtn');
+  if(ck && !ck.dataset.wired){
+    ck.dataset.wired='1';
+    ck.addEventListener('click',checkMissingImages);
+  }
+
+  var bgFile=$('#customBgFile');
+  if(bgFile && !bgFile.dataset.wired){
+    bgFile.dataset.wired='1';
+    bgFile.addEventListener('change',function(){
+      var f=this.files[0];
+      if(!f) return;
+      uploadCustomBg(f);
+      this.value='';
+    });
+  }
+  var clearBtn=$('#bgClearBtn');
+  if(clearBtn && !clearBtn.dataset.wired){
+    clearBtn.dataset.wired='1';
+    clearBtn.addEventListener('click',function(){
+      $('#customBgImage').value='';
+      var p=$('#customBgPreview'); p.style.display='none'; p.removeAttribute('src');
+    });
+  }
+
+  // 背景音乐
+  var mf=$('#musicFile');
+  if(mf && !mf.dataset.wired){
+    mf.dataset.wired='1';
+    mf.addEventListener('change',function(){
+      var f=this.files[0];
+      if(!f) return;
+      uploadMusic(f);
+      this.value='';
+    });
+  }
+  var mc=$('#musicClearBtn');
+  if(mc && !mc.dataset.wired){
+    mc.dataset.wired='1';
+    mc.addEventListener('click',function(){
+      $('#musicUrl').value='';
+      updateMusicPreview();
+      setStatus('已清除背景音乐配置。记得点“保存所有修改”','info');
+    });
+  }
+  var mu=$('#musicUrl');
+  if(mu && !mu.dataset.wired){
+    mu.dataset.wired='1';
+    mu.addEventListener('input',updateMusicPreview);
+  }
+
+  var sv=$('#saveBtn');
+  if(sv && !sv.dataset.wired){ sv.dataset.wired='1'; sv.addEventListener('click',saveData); }
+}
+function addPhotoBtnDisabled(v){
+  var b=$('#addPhotoBtn'); if(b) b.disabled=v;
+  var s=$('#saveBtn'); if(s) s.disabled=v;
+}
+function photoContainerClick(e){
+  var btn=e.target.closest('[data-act]');
+  if(!btn) return;
+  var item=btn.closest('.ph-item');
+  var act=btn.getAttribute('data-act');
+  if(act==='del'){ item.remove(); refreshMoveState(); }
+  else{
+    var items=photoItems(), idx=items.indexOf(item);
+    var j=act==='up'?idx-1:idx+1;
+    if(j<0||j>=items.length) return;
+    if(act==='up') item.parentElement.insertBefore(item,items[j]);
+    else item.parentElement.insertBefore(items[j],item);
+    refreshMoveState();
+  }
+}
+/* 手动检查：把仓库中已不存在的图片条目标记为“已失效”（红色边框，便于人工确认后删除） */
+function checkMissingImages(){
+  if(!imageIndexCache) return loadImageIndex(true).then(function(idx){ idx?markMissing(idx):setStatus('❌ 无法读取仓库目录','err'); }).catch(function(){ setStatus('❌ 无法读取仓库目录','err'); });
+  markMissing(imageIndexCache);
+}
+function markMissing(idx){
+  if(!idx || !idx.length){ setStatus('❌ 仓库图片目录为空或无法读取','err'); return; }
+  var names={}; idx.forEach(function(f){ names[f.name]=1; });
+  var items=photoItems(), missed=0;
+  items.forEach(function(item){
+    var src=item.querySelector('.f-src').value.trim();
+    if(!src) return;
+    var fname=src.split('/').pop()||'';
+    var ok=names[fname];
+    if(!ok){ var stem=fname.replace(/^thumb_/,'').replace(/\.[^.]+$/,''); ok=idx.some(function(f){ return f.name.replace(/\.[^.]+$/,'')===stem; }); }
+    if(!ok){ item.classList.add('broken'); missed++; }
+    else item.classList.remove('broken');
+  });
+  refreshMoveState();
+  setStatus(missed?('发现 '+missed+' 条作品的图片在仓库中已不存在（已标红，可删除该行）。'):'所有作品的图片均有效 ✅','ok');
+}
+
+/* ---------- 背景图 / 音乐上传 ---------- */
+function uploadCustomBg(file){
+  setStatus('正在检查并上传背景图…','info');
+  ensureRepoFile(file)
+    .then(function(res){
+      $('#customBgImage').value=res.path;
+      var p=$('#customBgPreview'); p.src=res.path; p.style.display='block';
+      setStatus(res.reused?'背景图已存在于仓库，直接复用 ✅（无需重新上传）':'背景图上传成功 ✅ 记得点“保存所有修改”','ok');
+    })
+    .catch(function(e){ setStatus('❌ 背景图上传失败: '+e.message,'err'); });
+}
+function uploadMusic(file){
+  setStatus('正在检查并上传音乐…','info');
+  ensureRepoFile(file)
+    .then(function(res){
+      $('#musicUrl').value=res.path;
+      updateMusicPreview();
+      setStatus(res.reused?'音乐已存在于仓库，直接复用 ✅':'音乐上传成功 ✅ 记得点“保存所有修改”','ok');
+    })
+    .catch(function(e){ setStatus('❌ 音乐上传失败: '+e.message,'err'); });
 }
 
 /* ---------- 保存 ---------- */
@@ -431,6 +718,7 @@ function collect(){
     background:'static',
     customBgImage:$('#customBgImage').value.trim(),
     bgParticles:false,
+    musicUrl:$('#musicUrl').value.trim(),
     photos:photos
   };
 }
@@ -438,14 +726,17 @@ function saveData(){
   setStatus('正在处理并保存…','info');
   var files=photoItems().map(function(item,i){ return {item:item,file:item.querySelector('.f-file').files[0],i:i}; })
     .filter(function(o){ return o.file; });
+  var reusedCount=0;
   (function next(){
     if(!files.length) return pushData();
     var o=files.shift();
     setStatus('正在上传图片：'+o.file.name+' …','info');
     uploadPhotoFile(o.file).then(function(res){
+      if(res.reused) reusedCount++;
       var src=o.item.querySelector('.f-src'), th=o.item.querySelector('.f-thumb'), img=o.item.querySelector('.thumb');
       src.value=res.mainPath; th.value=res.thumbPath;
       img.src=res.thumbPath; img.classList.remove('broken');
+      o.item.classList.remove('broken');
       next();
     }).catch(function(e){ setStatus('❌ 图片上传失败：'+e.message,'err'); });
   })();
@@ -454,17 +745,15 @@ function saveData(){
     var jsonStr=JSON.stringify(d);
     var bytes=new TextEncoder().encode(jsonStr);
     var content=btoa(String.fromCharCode.apply(null,new Uint8Array(bytes)));
-    fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+DATA_PATH+'?ref='+BRANCH,{headers:{Authorization:'token '+token}})
-      .then(function(r){ if(!r.ok) throw new Error('获取文件信息失败 ('+r.status+')'); return r.json(); })
+    fileMeta(DATA_PATH)
       .then(function(fi){
-        return fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+DATA_PATH,{
+        return api(ghBase()+'/contents/'+DATA_PATH,{
           method:'PUT',
-          headers:{Authorization:'token '+token,'Content-Type':'application/json'},
+          headers:{'Content-Type':'application/json'},
           body:JSON.stringify({message:'更新网站内容',content:content,sha:fi.sha,branch:BRANCH})
         });
       })
-      .then(function(r){ if(!r.ok) return r.json().then(function(d){ throw new Error('保存失败 ('+r.status+') '+d.message); }); return r; })
-      .then(function(){ currentData=d; setStatus('✅ 保存成功！前台 1–2 分钟内自动更新。','ok'); })
+      .then(function(){ currentData=d; setStatus(reusedCount?('✅ 保存成功！'+reusedCount+' 张重复图片已跳过未上传。前台 1–2 分钟内自动更新。'):'✅ 保存成功！前台 1–2 分钟内自动更新。','ok'); })
       .catch(function(e){ setStatus('❌ '+e.message,'err'); });
   }
 }
