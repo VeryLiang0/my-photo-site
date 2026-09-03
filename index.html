@@ -420,6 +420,25 @@ body.mode-white .rail-count b{color:#000}
   #noticeBar{font-size:11px;letter-spacing:.1em;padding:6px 12px}
   .offer-card{padding:22px 18px 18px}
 }
+/* ================= v2.2 交互增强：大图加载 / 灯箱缩放 / 双端细节 ================= */
+#artBox{position:relative}
+#artBox.is-loading::after{content:"";position:absolute;left:50%;top:50%;width:42px;height:42px;margin:-23px 0 0 -23px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;pointer-events:none;z-index:2}
+body.mode-white #artBox.is-loading::after{border-color:rgba(0,0,0,.18);border-top-color:#000}
+#lbImg{transition:opacity .45s var(--ease),transform .5s var(--ease);cursor:zoom-in}
+#lbImg.is-zoomed{transform:scale(1.9);cursor:zoom-out}
+.art-bar .rail-btn:active{transform:scale(.9)}
+.rail-dot:active{transform:scale(.82)}
+@media(max-width:920px){
+  #artBox{min-height:52vh}
+  #lbMeta .m-title{font-size:14px}
+}
+@media(max-width:480px){
+  #artBox{min-height:46vh}
+  .art-bar{gap:10px}
+  #artBar .rail-btn,#artBar button{width:34px;height:34px;flex:none}
+  .rail-count{font-size:10px}
+  #lbImg.is-zoomed{transform:scale(1.7)}
+}
 </style>
 </head>
 <body>
@@ -536,7 +555,7 @@ body.mode-white .rail-count b{color:#000}
 
     <div class="wrap">
       <div class="empty" id="emptyMsg" style="display:none">
-        还没有作品 —— 打开 <a href="admin/index.html">后台管理</a> 上传图片，新作品会自动出现在这里与首页轮播中。
+        还没有作品 —— 打开 <a href="editor.html">后台管理</a> 上传图片，新作品会自动出现在这里与首页轮播中。
       </div>
     </div>
   </section>
@@ -657,8 +676,11 @@ function loadData(){
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function thumbOf(p){ return p.thumb || p.src; }
-/* v2 预览图策略：画廊/首屏永远用 预览图(preview) → 旧缩略图(thumb) → 兜底原图 */
+/* v2.2 图源策略：
+   - 画廊循环卡片（小图）：preview → thumb → src，保持流畅
+   - 首屏主展示（hero 大图）：优先高清预览 preview；旧数据没有 preview 时直接使用原图 src（大尺寸高清），不再回退 400px 缩略图 */
 function listSrc(p){ return (p&&p.preview) || (p&&p.thumb) || (p&&p.src) || ''; }
+function heroSrc(p){ return (p&&p.preview) || (p&&p.src) || (p&&p.thumb) || ''; }
 function fullSrc(p){ return (p&&p.src) || ''; }
 
 /* v2：已切换 Cloudflare Pages 同域直出（xlhh.xyz），移除 jsDelivr CDN */
@@ -824,7 +846,7 @@ function renderMarquee(){
 }
 
 /* ===== 首屏舞台：自动轮播 + 完整展示 + 控制 ===== */
-var stage={i:0,timer:null,playing:true};
+var stage={i:0,timer:null,playing:false,suppressClick:false};
 var ICON_PAUSE='<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
 var ICON_PLAY ='<svg viewBox="0 0 24 24"><path d="M8 5.2v13.6a1 1 0 0 0 1.53.85l11-6.8a1 1 0 0 0 0-1.7l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
 function pad2(n){ return (Math.max(0,n|0)<10?'0':'')+(Math.max(0,n|0)); }
@@ -863,11 +885,14 @@ function syncFxLevel(){
 function stageTo(i){
   if(!photos.length) return;
   stage.i=(i+photos.length)%photos.length;
-  var imgs=$$('#artPhotos img'), dots=$$('#railDots .rail-dot');
+  var artBox=$('#artBox'), imgs=$$('#artPhotos img'), dots=$$('#railDots .rail-dot');
   for(var k=0;k<imgs.length;k++){
     if(k===stage.i){
       if(!imgs[k].getAttribute('src')){
-        imgs[k].setAttribute('src',listSrc(photos[k]));   // 首屏轮播使用预览图
+        artBox.classList.add('is-loading');
+        imgs[k].onload=function(){ artBox.classList.remove('is-loading'); };
+        imgs[k].onerror=function(){ artBox.classList.remove('is-loading'); };
+        imgs[k].setAttribute('src',heroSrc(photos[k]));   // v2.2 主展示：高清预览优先，旧数据直接用原图
       }
       imgs[k].classList.add('active');
     } else imgs[k].classList.remove('active');
@@ -881,7 +906,9 @@ function stageTo(i){
 function preloadStage(d){
   if(!photos.length) return;
   var j=(stage.i+d+photos.length)%photos.length;
-  var im=new Image(); im.src=listSrc(photos[j]);   // 预载相邻预览图
+  var p=photos[j];
+  if(!p || !p.preview) return;   // v2.2：无高清预览时不做原图后台预载（省流量），切换时按需加载
+  var im=new Image(); im.src=p.preview;
 }
 function stageStart(){
   if(stage.timer||reduced) return;
@@ -915,12 +942,37 @@ function buildStage(){
     dots.appendChild(d);
   });
   $('#railPlay').addEventListener('click',function(){
+    if(photos.length<2) return;
     if(stage.timer){ stageStop(); setStagePlaying(false); }
     else stageStart();
   });
-  $('#artBox').addEventListener('click',function(){ if(photos.length) openLightbox(stage.i); });
+  $('#artBox').addEventListener('click',function(){ if(photos.length && !stage.suppressClick) openLightbox(stage.i); });
+  bindStageSwipe();
   stageTo(0);
-  if(photos.length>1 && !reduced) stageStart(); else setStagePlaying(false);
+  setStagePlaying(false);   // v2.2：默认不自动轮播，点 ▶ 播放按钮才启动
+}
+/* v2.2 首屏主图手势：左右滑动切换 · 短点进入大图（避免滑动误触） */
+function bindStageSwipe(){
+  var box=$('#artBox'); if(!box || box.dataset.swipe) return;
+  box.dataset.swipe='1';
+  var sx=null, sy=null;
+  box.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1) return;
+    sx=e.touches[0].clientX; sy=e.touches[0].clientY;
+  },{passive:true});
+  box.addEventListener('touchend',function(e){
+    if(sx===null) return;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)*1.4){
+      var wasAuto=!!stage.timer;
+      if(wasAuto) stageStop();
+      stage.suppressClick=true;
+      stageTo(dx<0?stage.i+1:stage.i-1);
+      if(wasAuto) stageStart();
+      setTimeout(function(){ stage.suppressClick=false; },400);
+    }
+    sx=null; sy=null;
+  },{passive:true});
 }
 
 /* ===== 灯箱 ===== */
@@ -932,14 +984,33 @@ function initLightbox(){
   $('#lbNext').addEventListener('click',function(e){ e.stopPropagation(); stepLightbox(1); });
   var lb=$('#lightbox');
   lb.addEventListener('click',function(e){ if(e.target===lb || e.target.classList.contains('lb-stage')) closeLightbox(); });
+  // v2.2 灯箱手势：左右滑动切图 · 快速双击放大/还原（桌面用 dblclick）
   var sx=null;
-  lb.addEventListener('touchstart',function(e){ sx=e.touches[0].clientX; },{passive:true});
+  var lastTapT=0, lastTapX=-1, lastTapY=-1;
+  lbImg.addEventListener('dblclick',function(e){ e.stopPropagation(); toggleZoom(); });
+  lb.addEventListener('touchstart',function(e){ if(e.touches.length===1) sx=e.touches[0].clientX; },{passive:true});
   lb.addEventListener('touchend',function(e){
-    if(sx===null) return;
-    var dx=e.changedTouches[0].clientX-sx;
-    if(Math.abs(dx)>44){ if(dx<0) stepLightbox(1); else stepLightbox(-1); }
-    sx=null;
+    if(sx!==null){
+      var dx=e.changedTouches[0].clientX-sx;
+      if(Math.abs(dx)>44){
+        if(lbImg.classList.contains('is-zoomed')) toggleZoom();
+        if(dx<0) stepLightbox(1); else stepLightbox(-1);
+        sx=null; return;
+      }
+      sx=null;
+    }
+    var now=Date.now(), tx=e.changedTouches[0].clientX, ty=e.changedTouches[0].clientY;
+    if(now-lastTapT<300 && Math.abs(tx-lastTapX)<30 && Math.abs(ty-lastTapY)<30){
+      toggleZoom();
+      lastTapT=0; return;
+    }
+    lastTapT=now; lastTapX=tx; lastTapY=ty;
   },{passive:true});
+}
+function toggleZoom(){
+  if(!lbImg) return;
+  var z=lbImg.classList.contains('is-zoomed');
+  lbImg.classList.toggle('is-zoomed',!z);
 }
 function openLightbox(i){
   if(!photos.length) return;
@@ -954,7 +1025,8 @@ function closeLightbox(){
   state.open=false;
   $('#lightbox').classList.remove('open');
   document.body.style.overflow='';
-  $('#lbImg').classList.remove('loaded','err');
+  var im=$('#lbImg');
+  im.classList.remove('loaded','err','is-zoomed');
 }
 function showImage(){
   var p=photos[state.idx];
@@ -1034,6 +1106,17 @@ function bindStatic(){
   addEventListener('scroll',onScroll,{passive:true});
   onScroll();
   tt.addEventListener('click',function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+
+  /* v2.2 作品循环带：按住（触摸/鼠标）暂停滚动，松开继续 */
+  var mw=$('#marqueeWrap');
+  if(mw && !mw.dataset.pause){
+    mw.dataset.pause='1';
+    var trackEl=$('#marqueeTrack');
+    mw.addEventListener('pointerdown',function(){ if(trackEl) trackEl.style.animationPlayState='paused'; },{passive:true});
+    ['pointerup','pointerleave','pointercancel'].forEach(function(ev){
+      mw.addEventListener(ev,function(){ if(trackEl) trackEl.style.animationPlayState=''; },{passive:true});
+    });
+  }
 
   var burger=$('#burger'), drawer=$('#drawer');
   function closeDrawer(){ drawer.classList.remove('open'); document.body.classList.remove('drawer-open'); burger.setAttribute('aria-expanded','false'); }
