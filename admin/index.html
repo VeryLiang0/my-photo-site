@@ -115,6 +115,15 @@ textarea{resize:vertical;min-height:74px}
   .ph-body .thumb{width:100%;height:auto;max-height:200px}
   #status{max-width:100%;margin-left:0}
 }
+.cfg-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:0 18px}
+.cfg-full{grid-column:1/-1}
+.switch{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:13.5px;letter-spacing:.04em}
+.switch input{width:auto;flex:none}
+.small-note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.75}
+.ph-fields .f-3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 12px}
+.ph-fields .f-2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.list-card{margin-bottom:14px}
+@media(max-width:760px){.ph-fields .f-3,.ph-fields .f-2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -158,10 +167,27 @@ textarea{resize:vertical;min-height:74px}
         <div><label>QQ 号</label><input type="text" id="qq" placeholder="如：884031786"></div>
         <div><label>抖音号（可编辑）</label><input type="text" id="douyin" placeholder="抖音搜索的账号，如 yansheng7000"></div>
       </div>
+      <label>顶部公告（留空则不显示）</label>
+      <input type="text" id="notice" placeholder="如：7 月排单中，急单请提前一周预约">
+      <div class="cfg-row">
+        <div>
+          <label>默认背景模式（访客仍可右下角切换）</label>
+          <select id="bgModeSel">
+            <option value="black">纯黑</option>
+            <option value="white">纯白</option>
+            <option value="custom">自定义背景图（需在下方 02 上传背景图）</option>
+          </select>
+        </div>
+        <div>
+          <label>报价区补充说明（可选）</label>
+          <input type="text" id="pricingNote" placeholder="如：定金 30% / 出片 7 天内">
+        </div>
+      </div>
+      <label class="switch"><input type="checkbox" id="fxEnabled" checked> 开启首页萤火虫氛围光效（暖黄 · 后台关闭后前台不渲染）</label>
     </div>
 
     <div class="card">
-      <h2><span class="no">02</span> 首页背景 <span class="hint-t">原片直传 · ≤24MB · 前台原色彩全屏铺展</span></h2>
+      <h2><span class="no">02</span> 首页背景 <span class="hint-t">原片直传 · ≤23.5MB · 前台原色彩全屏铺展 · 与黑/白三模式切换</span></h2>
       <div class="bg-box">
         <div class="col">
           <label>自定义背景图路径</label>
@@ -170,7 +196,7 @@ textarea{resize:vertical;min-height:74px}
             <span class="btn line sm file-btn">选择背景图<input type="file" id="customBgFile" accept="image/*"></span>
             <button class="btn line sm" id="bgClearBtn">清除</button>
           </div>
-          <p class="hint">说明：背景图以原片直传（不压缩、保留原色彩，前台全屏铺展，无滤镜），上限 24MB；超限才自动压缩到 ≤24MB。<br>观众可在前台一键切换“自定义背景 / 纯黑”。上传前会先检查仓库是否已存在同一文件，存在则直接复用。</p>
+          <p class="hint">说明：背景图以原片直传（不压缩、保留原色彩，前台全屏铺展，无滤镜），上限 23.5MB；超限才自动压缩到 ≤23.5MB。<br>观众可在前台右下角于“纯黑 / 纯白 / 自定义背景”间循环切换（自定义档需此处传了图才会出现）。上传前会先检查仓库是否已存在同一文件，存在则直接复用。</p>
         </div>
         <img class="bg-preview" id="customBgPreview" alt="背景预览">
       </div>
@@ -206,7 +232,23 @@ textarea{resize:vertical;min-height:74px}
       </div>
       <p class="hint">每行可：修改名称（会显示在图片下方与“正在展示”里）· 上传/替换图片（自动压缩 + 生成缩略图）· 删除该条目。<br>
       上传前会先检查仓库（以及当前展示列表）是否已存在该图片：存在则直接复用路径、不再重复上传；保存/刷新时可自动清理引用已失效图片的作品条目。<br>
-      支持 JPG / PNG / WEBP；上传图片会确保 ≤19MB（超过自动渐进压缩为 WebP，适配 jsDelivr CDN 20MB 上限）。</p>
+      支持 JPG / PNG / WEBP；上传图片会确保 ≤23.5MB（超过自动渐进压缩为 WebP）。每张图片会自动生成 1920px · Q0.85 的 WebP 高清预览图供前台列表使用，原图仅在点击放大时加载，加载更快又保证画质。</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">05</span> 约拍报价 <span class="hint-t">留空则前台不显示报价区</span></h2>
+      <div id="offersContainer"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn black" id="addOfferBtn">＋ 添加报价</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">06</span> 作品分集 <span class="hint-t">前台会出现“全部 / 分组”页签，作品行可归属某组；留空则不分集</span></h2>
+      <div id="groupsContainer"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn black" id="addGroupBtn">＋ 添加分组</button>
+      </div>
     </div>
   </div>
 </div>
@@ -422,11 +464,11 @@ function uploadBytes(name,bytes,sha){
     });
 }
 
-/* ---------- 图片上传（主图 + 缩略图） ---------- */
-/* jsDelivr CDN 单文件约 20MB：作品图统一压到 19MB 以内保证 CDN 可服务；
-   首页背景图按“原片直传”，独立上限 24MB */
-var MAX_UPLOAD_BYTES = 19*1024*1024;
-var MAX_BG_BYTES = 24*1024*1024;
+/* ---------- 图片上传（原图 + 高清预览图） ---------- */
+/* v2：站点经 Cloudflare Pages 发布，单文件 <24MB。原图与背景图统一上限 ≈23.5MB；
+   超限才执行“画质优先二分压缩”（在 ≤23.5MB 内挑最高画质），最大程度保留观赏性 */
+var MAX_UPLOAD_BYTES = 23.5*1024*1024;
+var MAX_BG_BYTES = 23.5*1024*1024;
 function loadImageObject(file){
   return new Promise(function(res,rej){
     var url=URL.createObjectURL(file), im=new Image();
@@ -502,7 +544,7 @@ function compressImage(file,maxDimension,quality){
   });
 }
 function uploadPhotoFile(file){
-  // 主图：≤19MB 原样不压；>19MB 分段二分压缩，在 ≤19MB 内挑最高画质（jsDelivr CDN 可服务）
+  // v2 主图：≤23.5MB 原样直传；超限分段二分压缩在 ≤23.5MB 内挑最高画质
   var base = cleanFileBase(file.name);
   var sp=splitName(base);
   var need = file.size > MAX_UPLOAD_BYTES;
@@ -515,13 +557,13 @@ function uploadPhotoFile(file){
   return proc.then(function(mainBlob){
     return readAsBytes(mainBlob).then(function(bytes){
       return uploadDedup(mainName,bytes).then(function(mainRes){
-        // 缩略图（webp 400px）：命名跟随“最终主图文件名”，避免同名不同图缩略图错配
+        // v2 高清预览图（webp · 长边 1920px · Q0.85）：命名跟随“最终主图文件名”，避免同名不同图预览错配
         var mainFile=(mainRes.path.split('/').pop()||mainName).replace(/\.(webp|jpe?g|png)$/i,'');
-        var thumbName='thumb_'+mainFile+'.webp';
-        return compressImage(file,400,0.62).then(function(thumbBlob){
-          return readAsBytes(thumbBlob).then(function(tb){
-            return uploadDedup(thumbName,tb).then(function(){
-              return {mainPath:mainRes.path, thumbPath:IMAGES_PATH+thumbName, reused:mainRes.reused};
+        var previewName='preview_'+mainFile+'.webp';
+        return compressImage(file,1920,0.85).then(function(pvBlob){
+          return readAsBytes(pvBlob).then(function(pb){
+            return uploadDedup(previewName,pb).then(function(){
+              return {mainPath:mainRes.path, previewPath:IMAGES_PATH+previewName, reused:mainRes.reused};
             });
           });
         });
@@ -567,6 +609,7 @@ function loadData(){
 }
 
 function fillForm(d){
+  d=d||{};
   $('#topName').textContent=d.siteName||'小林花花';
   $('#siteName').value=d.siteName||'';
   $('#subtitle').value=d.subtitle||'';
@@ -575,12 +618,20 @@ function fillForm(d){
   $('#intro').value=d.intro||'';
   $('#qq').value=d.qq||'';
   $('#douyin').value=d.douyin||'';
+  var noticeEl=$('#notice'); if(noticeEl) noticeEl.value=d.notice||'';
+  var bm=$('#bgModeSel'); if(bm) bm.value=(['black','white','custom'].indexOf(d.bgMode)>=0?d.bgMode:'black');
+  var fx=$('#fxEnabled'); if(fx) fx.checked=d.bgParticles!==false;
+  var pn=$('#pricingNote'); if(pn) pn.value=d.pricingNote||'';
   $('#customBgImage').value=d.customBgImage||'';
   if(d.customBgImage){ var p=$('#customBgPreview'); p.src=d.customBgImage; p.style.display='block'; }
   // 背景音乐
   var mu=$('#musicUrl');
   mu.value=d.musicUrl||'';
   updateMusicPreview();
+  groupsAll=(d.groups||[]).filter(function(g){ return g && g.name; });
+  offersAll=(d.offers||[]).filter(function(o){ return o && (o.title||o.price||o.note); });
+  renderOffers();
+  renderGroupsRows();
   renderPhotos(d.photos||[]);
 }
 function updateMusicPreview(){
@@ -591,7 +642,18 @@ function updateMusicPreview(){
 }
 
 /* ---------- 作品列表 ---------- */
+var groupsAll=[];   // 当前分集配置 [{id,name}]
+var offersAll=[];  // 当前报价配置 [{title,price,note}]
+function hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function groupOptionsHTML(sel){
+  var h='<option value="">（未分组）</option>';
+  for(var i=0;i<groupsAll.length;i++){ var g=groupsAll[i]; h+='<option value="'+hx(g.id)+'"'+(String(sel)===g.id?' selected':'')+'>'+hx(g.name)+'</option>'; }
+  return h;
+}
 function photoRowHTML(p,i){
+  p=p||{};
+  var thumbSrc=p.preview||p.thumb||p.src||'';
+  var showName=(p.title||p.alt||'').slice(0,16)||'（未命名）';
   return ''+
   '<div class="ph-item" data-i="'+i+'">'+
     '<div class="ph-head">'+
@@ -600,21 +662,26 @@ function photoRowHTML(p,i){
         '<button class="arrow" data-act="up" title="上移" '+ (i===0?'disabled':'') +'>↑</button>'+
         '<button class="arrow" data-act="down" title="下移" '+ (i===0?'disabled':'') +'>↓</button>'+
       '</span>'+
-      '<span class="name">'+( (p.alt||'').slice(0,16)||'（未命名）')+'</span>'+
+      '<span class="name">'+hx(showName)+'</span>'+
       '<span class="miss-tag">图片已失效</span>'+
       '<button class="del" data-act="del">删除</button>'+
     '</div>'+
     '<div class="ph-body">'+
-      '<img class="thumb" alt="" '+(p.thumb||p.src?'src="'+(p.thumb||p.src)+'"':'')+'>'+
+      '<img class="thumb" alt="" '+(thumbSrc?'src="'+hx(thumbSrc)+'"':'')+'>'+
       '<div class="ph-fields">'+
-        '<label>作品名称（图片下方 / 正在展示里显示）</label>'+
-        '<input type="text" class="f-alt" value="'+(p.alt||'').replace(/"/g,'&quot;')+'" placeholder="如：Fate · Saber">'+
-        '<div class="row2"><div><label>原图路径</label><input type="text" class="f-src" value="'+(p.src||'').replace(/"/g,'&quot;')+'" placeholder="images/xxx.jpg"></div>'+
-        '<div><label>缩略图路径</label><input type="text" class="f-thumb" value="'+(p.thumb||'').replace(/"/g,'&quot;')+'" placeholder="自动生成"></div></div>'+
+        '<label>作品标题（列表与灯箱内展示；留空则只显示编号，不显示文字）</label>'+
+        '<input type="text" class="f-title" value="'+hx(p.title||'')+'" placeholder="如：Fate · Saber">'+
+        '<div class="row2"><div><label>原图路径（点击放大时加载的大图）</label><input type="text" class="f-src" value="'+hx(p.src||'')+'" placeholder="images/xxx.jpg"></div>'+
+        '<div><label>高清预览图路径</label><input type="text" class="f-preview" value="'+hx(p.preview||'')+'" placeholder="自动生成 preview_xxx.webp"></div></div>'+
+        '<div class="f-3">'+
+          '<div><label>所属分集</label><select class="f-group">'+groupOptionsHTML(p.group)+'</select></div>'+
+          '<div><label>一句话描述（灯箱内展示，可选）</label><input type="text" class="f-desc" value="'+hx(p.desc||'')+'" placeholder="氛围 / 后期说明"></div>'+
+          '<div><label>拍摄参数（可选）</label><input type="text" class="f-params" value="'+hx(p.params||'')+'" placeholder="如：85mm · f1.8 · 棚拍"></div>'+
+        '</div>'+
         '<div class="ph-tools">'+
           '<span class="btn line sm file-btn">上传 / 替换图片<input type="file" class="f-file" accept="image/*"></span>'+
         '</div>'+
-        '<p class="hint" style="margin:6px 0 0">选完点保存；若仓库已存在同一图片会自动复用，不再重复上传。</p>'+
+        '<p class="hint" style="margin:6px 0 0">选完点保存：自动压缩原图 ≤23.5MB 并生成 1920px 高清预览图；仓库已有同一图片会自动复用，不再重复上传。</p>'+
       '</div>'+
     '</div>'+
   '</div>';
@@ -636,12 +703,17 @@ function refreshMoveState(){
 }
 function addPhotoRow(p){
   var box=$('#photosContainer');
-  box.insertAdjacentHTML('beforeend',photoRowHTML(p||{src:'',thumb:'',alt:''},photoItems().length));
+  box.insertAdjacentHTML('beforeend',photoRowHTML(p||{src:'',preview:'',title:''},photoItems().length));
   refreshMoveState();
 }
+function bindListHosts(){
+  ['#photosContainer','#offersContainer','#groupsContainer'].forEach(function(sel){
+    var box=$(sel);
+    if(box && !box.dataset.wired){ box.dataset.wired='1'; box.addEventListener('click',photoContainerClick); }
+  });
+}
 function wirePhotoActions(){
-  var photoBox=$('#photosContainer');
-  if(photoBox && !photoBox.dataset.wired){ photoBox.dataset.wired='1'; photoBox.addEventListener('click',photoContainerClick); }
+  bindListHosts();
   var addBtn=$('#addPhotoBtn');
   if(addBtn && !addBtn.dataset.wired){ addBtn.dataset.wired='1'; addBtn.addEventListener('click',function(){ addPhotoRow(); }); }
 
@@ -669,7 +741,7 @@ function wirePhotoActions(){
         setStatus('批量上传 ('+(i+1)+'/'+files.length+') '+f.name+' …','info');
         uploadPhotoFile(f).then(function(res){
           if(res.reused) reusedTotal++;
-          addPhotoRow({src:res.mainPath,thumb:res.thumbPath,alt:splitName(cleanFileBase(f.name)).stem});
+          addPhotoRow({src:res.mainPath,preview:res.previewPath||'',title:splitName(cleanFileBase(f.name)).stem});
           next(i+1);
         }).catch(function(e){
           setStatus('❌ 上传失败：'+f.name+' — '+e.message,'err');
@@ -741,17 +813,102 @@ function addPhotoBtnDisabled(v){
 function photoContainerClick(e){
   var btn=e.target.closest('[data-act]');
   if(!btn) return;
-  var item=btn.closest('.ph-item');
+  var host=btn.closest('#photosContainer,#offersContainer,#groupsContainer');
+  if(!host) return;
+  var item=btn.closest('.ph-item'); if(!item) return;
   var act=btn.getAttribute('data-act');
-  if(act==='del'){ item.remove(); refreshMoveState(); }
-  else{
-    var items=photoItems(), idx=items.indexOf(item);
-    var j=act==='up'?idx-1:idx+1;
-    if(j<0||j>=items.length) return;
-    if(act==='up') item.parentElement.insertBefore(item,items[j]);
-    else item.parentElement.insertBefore(items[j],item);
-    refreshMoveState();
+  if(act==='del'){
+    item.remove();
+    if(host.id==='groupsContainer') refreshPhotoGroupSelects();
+    if(host.id==='photosContainer') refreshMoveState();
+    return;
   }
+  var items=Array.prototype.slice.call(host.querySelectorAll('.ph-item'));
+  var idx=items.indexOf(item), j=act==='up'?idx-1:idx+1;
+  if(j<0||j>=items.length) return;
+  if(act==='up') host.insertBefore(item,items[j]); else host.insertBefore(items[j],item);
+  if(host.id==='photosContainer') refreshMoveState();
+}
+/* ---------- v2 报价与分集管理（内容全部自定义，保存时读取） ---------- */
+function offerRowHTML(o,i){
+  o=o||{};
+  return ''+
+  '<div class="ph-item list-card" data-i="'+i+'">'+
+    '<div class="ph-head">'+
+      '<span class="idx">#'+String(i+1).padStart(2,'0')+'</span>'+
+      '<span class="move"><button class="arrow" data-act="up" title="上移">↑</button><button class="arrow" data-act="down" title="下移">↓</button></span>'+
+      '<span class="name">'+(o.title?hx(o.title):'（未命名报价）')+'</span>'+
+      '<button class="del" data-act="del">删除</button>'+
+    '</div>'+
+    '<div class="ph-body"><div class="ph-fields">'+
+      '<div class="f-3">'+
+        '<div><label>套餐名</label><input type="text" class="o-title" value="'+hx(o.title||'')+'" placeholder="如：棚拍 · 单人"></div>'+
+        '<div><label>价格</label><input type="text" class="o-price" value="'+hx(o.price||'')+'" placeholder="如：299 原价399"></div>'+
+        '<div><label>说明 / 活动（可选）</label><input type="text" class="o-note" value="'+hx(o.note||'')+'" placeholder="如：含后期精修 · 7 月活动立减 100"></div>'+
+      '</div>'+
+    '</div></div>'+
+  '</div>';
+}
+function renderOffers(){
+  var box=$('#offersContainer'); if(!box) return;
+  box.innerHTML='';
+  offersAll.forEach(function(o,i){ box.insertAdjacentHTML('beforeend',offerRowHTML(o,i)); });
+  var ab=$('#addOfferBtn');
+  if(ab && !ab.dataset.wired){ ab.dataset.wired='1'; ab.addEventListener('click',addOfferRow); }
+}
+function collectOffers(){
+  var out=[];
+  $$('#offersContainer .ph-item').forEach(function(item){
+    var title=item.querySelector('.o-title').value.trim();
+    var price=item.querySelector('.o-price').value.trim();
+    var note=item.querySelector('.o-note').value.trim();
+    if(title||price||note) out.push({title:title,price:price,note:note});
+  });
+  return out;
+}
+function addOfferRow(){ offersAll.push({title:'',price:'',note:''}); renderOffers(); }
+function groupRowHTML(g,i){
+  g=g||{};
+  return ''+
+  '<div class="ph-item list-card" data-gid="'+hx(g.id||'')+'" data-i="'+i+'">'+
+    '<div class="ph-head">'+
+      '<span class="idx">G'+(i+1)+'</span>'+
+      '<span class="move"><button class="arrow" data-act="up" title="上移">↑</button><button class="arrow" data-act="down" title="下移">↓</button></span>'+
+      '<span class="name">'+hx(g.name||'（未命名分集）')+'</span>'+
+      '<button class="del" data-act="del">删除</button>'+
+    '</div>'+
+    '<div class="ph-body"><div class="ph-fields">'+
+      '<label>分集名称（前台页签文字，可自定义）</label>'+
+      '<input type="text" class="g-name" value="'+hx(g.name||'')+'" placeholder="如：棚拍 / 展会 / 合成后期">'+
+      '<p class="hint" style="margin:6px 0 0">删除某分集后，属于它的作品会回到“全部”分组。名称修改后点保存即可同步前台页签。</p>'+
+    '</div></div>'+
+  '</div>';
+}
+function renderGroupsRows(){
+  var box=$('#groupsContainer'); if(!box) return;
+  box.innerHTML='';
+  groupsAll.forEach(function(g,i){ box.insertAdjacentHTML('beforeend',groupRowHTML(g,i)); });
+  var gb=$('#addGroupBtn');
+  if(gb && !gb.dataset.wired){ gb.dataset.wired='1'; gb.addEventListener('click',addGroupRow); }
+  refreshPhotoGroupSelects();
+}
+function collectGroups(){
+  var out=[];
+  $$('#groupsContainer .ph-item').forEach(function(item){
+    var name=item.querySelector('.g-name').value.trim();
+    if(!name) return;
+    var id=item.getAttribute('data-gid')||('g'+Date.now()+'_'+Math.floor(Math.random()*1e4));
+    out.push({id:id,name:name});
+  });
+  return out;
+}
+function addGroupRow(){ groupsAll.push({id:'g'+Date.now()+'_'+Math.floor(Math.random()*1e4),name:''}); renderGroupsRows(); }
+function refreshPhotoGroupSelects(){
+  $$('#photosContainer .ph-item').forEach(function(item){
+    var sel=item.querySelector('.f-group'); if(!sel) return;
+    var cur=sel.value;
+    sel.innerHTML=groupOptionsHTML(cur);
+  });
 }
 /* 手动检查：把仓库中已不存在的图片条目标记为“已失效”（红色边框，便于人工确认后删除） */
 function checkMissingImages(){
@@ -810,9 +967,22 @@ function collect(){
   var photos=[];
   photoItems().forEach(function(item){
     var src=item.querySelector('.f-src').value.trim();
-    var thumb=item.querySelector('.f-thumb').value.trim();
-    if(src) photos.push({src:src,thumb:thumb||src,alt:item.querySelector('.f-alt').value.trim()});
+    if(!src) return;
+    var preview=item.querySelector('.f-preview').value.trim();
+    var title=item.querySelector('.f-title').value.trim();
+    var desc=item.querySelector('.f-desc').value.trim();
+    var params=item.querySelector('.f-params').value.trim();
+    var group=item.querySelector('.f-group').value;
+    var o={src:src};
+    if(preview) o.preview=preview;
+    if(title) o.title=title;
+    if(desc) o.desc=desc;
+    if(params) o.params=params;
+    if(group) o.group=group;
+    photos.push(o);
   });
+  var bgSel=$('#bgModeSel');
+  var fx=$('#fxEnabled');
   return {
     siteName:$('#siteName').value.trim(),
     subtitle:$('#subtitle').value.trim(),
@@ -821,10 +991,14 @@ function collect(){
     intro:$('#intro').value.trim(),
     qq:$('#qq').value.trim(),
     douyin:$('#douyin').value.trim(),
-    background:'static',
+    notice:$('#notice').value.trim(),
+    bgMode:bgSel?bgSel.value:'black',
+    bgParticles:fx?fx.checked:true,
+    pricingNote:$('#pricingNote').value.trim(),
     customBgImage:$('#customBgImage').value.trim(),
-    bgParticles:false,
     musicUrl:$('#musicUrl').value.trim(),
+    offers:collectOffers(),
+    groups:collectGroups(),
     photos:photos
   };
 }
@@ -839,9 +1013,9 @@ function saveData(){
     setStatus('正在上传图片：'+o.file.name+' …','info');
     uploadPhotoFile(o.file).then(function(res){
       if(res.reused) reusedCount++;
-      var src=o.item.querySelector('.f-src'), th=o.item.querySelector('.f-thumb'), img=o.item.querySelector('.thumb');
-      src.value=res.mainPath; th.value=res.thumbPath;
-      img.src=res.thumbPath; img.classList.remove('broken');
+      var src=o.item.querySelector('.f-src'), pv=o.item.querySelector('.f-preview'), img=o.item.querySelector('.thumb');
+      src.value=res.mainPath; if(pv) pv.value=res.previewPath||'';
+      img.src=res.previewPath||res.mainPath; img.classList.remove('broken');
       o.item.classList.remove('broken');
       next();
     }).catch(function(e){ setStatus('❌ 图片上传失败：'+e.message,'err'); });

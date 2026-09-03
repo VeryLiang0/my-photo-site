@@ -337,9 +337,94 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
 @keyframes ring{0%{transform:scale(.92);opacity:.9}100%{transform:scale(1.35);opacity:0}}
 #ftMusic,#ftBg{display:none}
 @media(max-width:480px){#floatTools{right:14px;bottom:14px;gap:8px}#floatTools button{width:40px;height:40px}}
+/* ================= v2 升级模块：公告 / 分集页签 / 报价 / 背景三模式 / 灯箱信息 ================= */
+#noticeBar{position:relative;z-index:55;background:#000;color:#fff;text-align:center;font-family:var(--num);letter-spacing:.16em;font-size:12.5px;line-height:1.8;padding:7px 16px}
+#noticeBar.hide{display:none}
+body.has-notice #nav{top:46px}
+#noticeBar b{font-family:var(--kai);font-weight:400;letter-spacing:.1em}
+body.mode-white #noticeBar{background:#fff;color:#000;border-bottom:1px solid rgba(0,0,0,.18)}
+
+#groupTabs{display:flex;flex-wrap:wrap;gap:10px;margin:-8px 0 28px}
+.g-tab{font-family:var(--num);font-size:12.5px;letter-spacing:.22em;padding:7px 20px;border-radius:999px;border:1px solid var(--line-strong);color:var(--txt-2);background:var(--surface);transition:.25s var(--ease);cursor:pointer}
+.g-tab:hover{border-color:var(--txt)}
+.g-tab.is-on{background:#000;color:#fff;border-color:#000}
+#tabsWrap.hide{display:none}
+
+.pricing{background:var(--bg);color:var(--txt);border-top:1px solid var(--line);padding:clamp(70px,8vw,110px) 0 90px;scroll-margin-top:92px}
+.pricing.hide{display:none}
+.pricing .pnote{color:var(--txt-2);max-width:56ch;margin-top:14px;font-size:15px;line-height:1.9}
+.offer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:clamp(26px,4vw,42px)}
+.offer-card{position:relative;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--txt);border-radius:8px;padding:26px 24px 22px;display:flex;flex-direction:column;gap:9px;transition:transform .3s var(--ease),box-shadow .3s}
+.offer-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-sm)}
+.offer-card .idx{position:absolute;top:18px;right:20px;font-family:var(--num);font-size:11px;letter-spacing:.2em;color:var(--muted)}
+.offer-card .title{font-family:var(--kai);font-weight:400;font-size:clamp(1.35rem,2.4vw,1.55rem);letter-spacing:.06em;color:var(--txt);padding-right:34px}
+.offer-card .price{font-family:var(--num);font-size:clamp(1.4rem,2.4vw,1.75rem);letter-spacing:.02em;color:var(--txt)}
+.offer-card .price small{font-size:.52em;color:var(--muted);letter-spacing:.12em;margin-left:8px}
+.offer-card .note{color:var(--txt-2);font-size:14px;line-height:1.85;flex:1}
+.offer-card .note b{color:var(--txt);font-weight:400;font-family:var(--kai)}
+
+.lb-bottom{display:flex;align-items:flex-end;justify-content:flex-end}
+#lbMeta{margin-right:auto;display:flex;flex-direction:column;gap:3px;min-width:0;max-width:min(640px,66vw);padding:0 6px 2px 0}
+#lbMeta .m-title{font-family:var(--kai);font-size:16px;letter-spacing:.14em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lbMeta .m-desc{font-size:13px;color:rgba(255,255,255,.72);letter-spacing:.04em;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#lbMeta .m-params{font-family:var(--num);font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.14em}
+
+.mcell figcaption{gap:9px;align-items:baseline}
+.mcell figcaption em{font-style:normal;font-family:var(--kai);font-size:12.5px;color:rgba(255,255,255,.85);letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(40vw,260px)}
+
+/* 背景三模式 · 白色模式（仅作用于首屏沉浸舞台） */
+body.mode-white .hero{background:#f4f4f0}
+body.mode-white .stage-veil{background:linear-gradient(100deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.55) 46%,rgba(255,255,255,.08) 76%),linear-gradient(0deg,rgba(255,255,255,.7) 0%,transparent 34%,transparent 76%,rgba(255,255,255,.85) 100%)}
+body.mode-white .hero .eyebrow{color:rgba(10,10,10,.55)}
+body.mode-white .hero h1{color:#111}
+body.mode-white .hero h1 .thin{color:rgba(10,10,10,.4)}
+body.mode-white .hero .lead{color:#2c2c2a}
+body.mode-white .hero .desc{color:#55554e}
+body.mode-white .hero .desc b{color:#000}
+body.mode-white #introText #styleEm{color:#000 !important}
+body.mode-white .now-bar{color:#333;border-color:rgba(10,10,10,.26)}
+body.mode-white .now-bar .pulse{background:#000}
+body.mode-white .now-bar b{color:#000}
+body.mode-white .now-bar i{color:#000}
+body.mode-white .chip{color:#222;border-color:rgba(10,10,10,.3);background:rgba(10,10,10,.05)}
+body.mode-white .chip.solid{background:#000;color:#fff;border-color:#000}
+body.mode-white #photoCount{color:#000 !important}
+body.mode-white .btn.ghost{border-color:rgba(10,10,10,.4);color:#111}
+body.mode-white .btn.ghost:hover{background:rgba(10,10,10,.08);border-color:#000}
+body.mode-white .hero-meta{color:#67675f}
+body.mode-white .hero-meta b{color:#141414}
+body.mode-white .scene-tag{color:rgba(10,10,10,.42)}
+body.mode-white .scroll-cue{color:rgba(10,10,10,.5)}
+body.mode-white .scroll-cue .line{background:linear-gradient(rgba(10,10,10,.6),transparent)}
+body.mode-white .scroll-cue .line::after{background:#000}
+body.mode-white .hero-art .rail-btn{background:rgba(10,10,10,.06);border-color:rgba(10,10,10,.26)}
+body.mode-white .hero-art .rail-btn:hover{background:rgba(10,10,10,.14);border-color:#000}
+body.mode-white .rail-btn svg{fill:#111}
+body.mode-white .rail-dot{background:rgba(10,10,10,.3)}
+body.mode-white .rail-dot.is-active{background:#000}
+body.mode-white .rail-count{color:rgba(10,10,10,.5)}
+body.mode-white .rail-count b{color:#000}
+
+/* 轮播 / 大图交叉淡入 + 微缩放 */
+.hero-art img{transform:scale(1.02)}
+.hero-art img.active{transform:scale(1)}
+#fx{opacity:.85}
+
+@media(max-width:760px){
+  #groupTabs{gap:8px;margin:-4px 0 20px}
+  .g-tab{padding:6px 15px;font-size:11.5px}
+  .offer-grid{grid-template-columns:1fr}
+  #lbMeta{max-width:100%}
+}
+@media(max-width:480px){
+  #noticeBar{font-size:11px;letter-spacing:.1em;padding:6px 12px}
+  .offer-card{padding:22px 18px 18px}
+}
 </style>
 </head>
 <body>
+<!-- v2 顶部公告条（留空自动隐藏） -->
+<div id="noticeBar" class="hide"><span id="noticeText"></span></div>
 <div id="boot"><div class="logo">花</div></div>
 <div id="progress"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -363,6 +448,7 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
     <ul class="nav-links">
       <li><a class="active" href="#home" data-spy="home">首页</a></li>
       <li><a href="#works" data-spy="works">作品</a></li>
+      <li><a href="#pricing" data-spy="pricing" id="navPricing">报价</a></li>
       <li><a href="#contact" data-spy="contact">联系</a></li>
     </ul>
     <a class="nav-cta" href="#works">看作品 ↓</a>
@@ -372,6 +458,7 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
 <nav id="drawer" aria-label="导航抽屉">
   <a class="active" href="#home">首页</a>
   <a href="#works">作品</a>
+  <a href="#pricing" id="navPricingDrawer">报价</a>
   <a href="#contact">联系</a>
   <small>XIAOLINHUAHUA · PHOTOGRAPHY</small>
 </nav>
@@ -438,6 +525,7 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
         </div>
       </div>
     </div>
+    <div class="wrap" id="tabsWrap"><div id="groupTabs"></div></div>
 
     <div class="loopband">
       <div class="band-cap"><span>横向循环 · 按原图比例完整展示</span><span class="num" id="capCount">12 WORKS</span></div>
@@ -453,10 +541,20 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
     </div>
   </section>
 
+  <!-- ===== v2 约拍报价区（后台 offers 为空时整块隐藏） ===== -->
+  <section class="pricing" id="pricing">
+    <div class="wrap">
+      <div class="eyebrow reveal" id="pricingEyebrow">02 / PRICING</div>
+      <h2 class="reveal d1" style="font-family:var(--kai);font-weight:400;font-size:clamp(1.9rem,4.2vw,3.2rem);letter-spacing:.08em;margin-top:10px">约拍报价</h2>
+      <p class="pnote reveal d2" id="pricingNote"></p>
+      <div class="offer-grid" id="offerGrid"></div>
+    </div>
+  </section>
+
   <!-- ===== 联系 ===== -->
   <section class="contact" id="contact">
     <div class="wrap">
-      <div class="eyebrow reveal">02 / CONTACT</div>
+      <div class="eyebrow reveal" id="contactEyebrow">02 / CONTACT</div>
       <div class="contact-grid">
         <div class="contact-left">
           <h2 class="reveal d1" style="font-family:var(--kai);font-weight:400;font-size:clamp(1.9rem,4.2vw,3.2rem);letter-spacing:.1em;margin-top:10px">联系我</h2>
@@ -508,6 +606,7 @@ footer{background:#0b0b0b;color:#fff;padding:40px 0 56px}
     <svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6"/></svg>
   </button>
   <div class="lb-bottom">
+    <div class="lb-meta" id="lbMeta"></div>
     <div class="lb-count" id="lbCount"><b>0</b> / 0</div>
   </div>
   <div class="lb-hint"><span><kbd>←</kbd><kbd>→</kbd> 切换</span><span><kbd>Esc</kbd> 关闭</span></div>
@@ -522,7 +621,8 @@ function $$(s,c){ return Array.prototype.slice.call((c||document).querySelectorA
 
 var state = {
   siteName:'小林花花', subtitle:'', style:'', heroTitle2:'', intro:'', qq:'', douyin:'',
-  customBgImage:'', musicUrl:'', bgMode:'black', photos:[], idx:0, open:false
+  customBgImage:'', musicUrl:'', notice:'', pricingNote:'', bgMode:'black', fxEnabled:true,
+  offers:[], groups:[], activeGroup:'all', photos:[], idx:0, open:false
 };
 
 function loadData(){
@@ -540,10 +640,16 @@ function loadData(){
         state.douyin=(d.douyin||'').toString();
         state.customBgImage=d.customBgImage||'';
         state.musicUrl=d.musicUrl||'';
+        state.notice=(d.notice||'').toString().trim();
+        state.pricingNote=(d.pricingNote||'').toString();
+        if(Array.isArray(d.offers)) state.offers=d.offers.filter(function(o){ return o && (o.title||o.price); });
+        if(Array.isArray(d.groups)) state.groups=d.groups.filter(function(g){ return g && g.name; });
+        state.fxEnabled=d.bgParticles!==false;
         if(Array.isArray(d.photos)) state.photos=d.photos.filter(function(p){ return p && p.src; });
-        // 默认背景：后台传了自定义背景 → custom（显示自定义图）；没传 → black（纯黑）。访客选择存 localStorage
-        state.bgMode = state.customBgImage ? 'custom' : 'black';
-        try{ var saved=localStorage.getItem('photo_bgMode'); if(saved==='custom'||saved==='black') state.bgMode=saved; }catch(e){}
+        // v2 背景三模式：black 纯黑 / white 纯白 / custom 自定义图（需后台传图）。访客选择存 localStorage
+        var allow=['black','white']; if(state.customBgImage) allow.push('custom');
+        state.bgMode = allow.indexOf(d.bgMode)>=0 ? d.bgMode : (state.customBgImage?'custom':'black');
+        try{ var saved=localStorage.getItem('photo_bgMode'); if(allow.indexOf(saved)>=0) state.bgMode=saved; }catch(e){}
         if(state.bgMode==='custom' && !state.customBgImage) state.bgMode='black';
       }
       renderAll();
@@ -551,35 +657,14 @@ function loadData(){
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function thumbOf(p){ return p.thumb || p.src; }
+/* v2 预览图策略：画廊/首屏永远用 预览图(preview) → 旧缩略图(thumb) → 兜底原图 */
+function listSrc(p){ return (p&&p.preview) || (p&&p.thumb) || (p&&p.src) || ''; }
+function fullSrc(p){ return (p&&p.src) || ''; }
 
-/* ===== jsDelivr CDN 加速：把仓库相对路径转成 cdn.jsdelivr.net 地址 ===== */
-var CDN='https://cdn.jsdelivr.net/gh/VeryLiang0/my-photo-site@main/';
-function cdn(path){
-  if(!path) return '';
-  if(/^https?:/.test(path)) return path;                 // 已是完整地址则原样
-  var seg=String(path).replace(/^\.\//,'').split('/').map(function(s){ return encodeURIComponent(s); });
-  return CDN+seg.join('/');
-}
-/* 给 <img> 挂 CDN 失败回退：jsDelivr 单文件超 20MB 时会失败，自动换回相对路径(GitHub Pages) */
-function bindCdnImg(img,fallbackPath){
-  if(!img) return;
-  img.addEventListener('error',function h(){
-    var s=img.getAttribute('src')||'';
-    if(s.indexOf('cdn.jsdelivr.net')>-1 && fallbackPath){
-      img.removeEventListener('error',h);
-      img.src=fallbackPath;
-    }
-  });
-}
-/* 背景图走 CDN（CSS 无法监听 error，用 Image 探测回退） */
-function cdnBackground(el,path){
-  if(!el) return;
-  var u=cdn(path);
-  var probe=new Image();
-  probe.onload=function(){ el.style.backgroundImage="url('"+u+"')"; };
-  probe.onerror=function(){ el.style.backgroundImage=path?("url('"+path+"')"):''; };
-  probe.src=u;
-}
+/* v2：已切换 Cloudflare Pages 同域直出（xlhh.xyz），移除 jsDelivr CDN */
+function cdn(path){ return path||''; }
+function bindCdnImg(){ /* 同域无需回退 */ }
+function cdnBackground(el,path){ if(!el) return; el.style.backgroundImage=path?("url('"+path+"')"):''; }
 
 function injectText(){
   var n=state.siteName||'小林花花';
@@ -600,15 +685,27 @@ function injectText(){
   if(!state.qq){ var c1=$('#qqValue').closest('.ccard'); if(c1) c1.style.display='none'; }
   if(!state.douyin){ var c2=$('#dyValue').closest('.ccard'); if(c2) c2.style.display='none'; }
   $('#year').textContent=new Date().getFullYear();
+  var hasOffers=state.offers.length>0;
+  var navP=$('#navPricing'); if(navP) navP.style.display=hasOffers?'':'none';
+  var navPd=$('#navPricingDrawer'); if(navPd) navPd.style.display=hasOffers?'':'none';
 }
 
 var photos=[];
+function visiblePhotos(){
+  var list=state.photos;
+  if(state.activeGroup==='all') return list;
+  return list.filter(function(p){ return String(p.group||'')===state.activeGroup; });
+}
 function renderAll(){
-  photos=state.photos;
-  $('#photoCount').textContent=photos.length;
-  $('#totalNum').textContent=photos.length;
-  $('#capCount').textContent=photos.length+' WORKS';
+  photos=visiblePhotos();
+  var n=photos.length;
+  $('#photoCount').textContent=n;
+  $('#totalNum').textContent=n;
+  $('#capCount').textContent=n+' WORKS';
   injectText();
+  renderNotice();
+  renderGroups();
+  renderPricing();
   buildStage();
   renderMarquee();
   initLightbox();
@@ -616,6 +713,74 @@ function renderAll(){
   initFx();
   initTools();
   applyBackdrop();
+}
+/* ===== v2 顶部公告条（后台 notice 为空时隐藏） ===== */
+function renderNotice(){
+  var bar=$('#noticeBar');
+  if(!bar) return;
+  if(state.notice){
+    var tx=$('#noticeText'); if(tx) tx.textContent=state.notice;
+    bar.classList.remove('hide');
+    document.body.classList.add('has-notice');
+  }else{
+    bar.classList.add('hide');
+    document.body.classList.remove('has-notice');
+  }
+}
+/* ===== v2 作品分集页签（后台 groups 为空则不启用分集） ===== */
+function renderGroups(){
+  var wrapEl=$('#tabsWrap'), tabsEl=$('#groupTabs');
+  if(!tabsEl||!wrapEl) return;
+  tabsEl.innerHTML='';
+  if(!state.groups.length){ wrapEl.classList.add('hide'); state.activeGroup='all'; return; }
+  wrapEl.classList.remove('hide');
+  function mk(id,name){
+    var b=document.createElement('button');
+    b.type='button'; b.className='g-tab'+(state.activeGroup===id?' is-on':'');
+    b.textContent=name; b.setAttribute('data-group',id);
+    b.addEventListener('click',function(){ setGroup(id); });
+    return b;
+  }
+  tabsEl.appendChild(mk('all','全部'));
+  state.groups.forEach(function(g){ tabsEl.appendChild(mk(g.id,g.name)); });
+}
+function setGroup(id){
+  state.activeGroup=id||'all';
+  photos=visiblePhotos();
+  renderGroups();
+  var n=photos.length;
+  $('#photoCount').textContent=n;
+  $('#totalNum').textContent=n;
+  $('#capCount').textContent=n+' WORKS';
+  buildStage();
+  renderMarquee();
+  applyBackdrop();
+}
+/* ===== v2 约拍报价区（后台 offers 为空时整块隐藏） ===== */
+function renderPricing(){
+  var sec=$('#pricing'); if(!sec) return;
+  var list=state.offers||[];
+  if(!list.length){ sec.classList.add('hide'); return; }
+  sec.classList.remove('hide');
+  var note=$('#pricingNote'); if(note) note.textContent=state.pricingNote||'';
+  var grid=$('#offerGrid'); if(!grid) return;
+  grid.innerHTML='';
+  list.forEach(function(o,i){
+    var card=document.createElement('div'); card.className='offer-card';
+    var idx=document.createElement('div'); idx.className='idx'; idx.textContent=('0'+(i+1)).slice(-2);
+    var t=document.createElement('div'); t.className='title'; t.textContent=o.title||('套餐 '+(i+1));
+    var pr=document.createElement('div'); pr.className='price';
+    var pt=(o.price||'').toString();
+    var m=pt.match(/^(.+?)\s+(原价[^\s]*)$/);
+    if(m){ pr.textContent=m[1]; var sm=document.createElement('small'); sm.textContent=m[2]; pr.appendChild(sm); }
+    else pr.textContent=pt;
+    var nt=document.createElement('div'); nt.className='note'; nt.innerHTML=esc(o.note||'');
+    card.appendChild(idx); card.appendChild(t); card.appendChild(pr); card.appendChild(nt);
+    grid.appendChild(card);
+  });
+  var pv=$('#pricingEyebrow'), ce=$('#contactEyebrow');
+  if(pv) pv.textContent='02 / PRICING';
+  if(ce) ce.textContent='03 / CONTACT';
 }
 
 /* ===== 循环展示条（按原比例完整展示每张图） ===== */
@@ -627,12 +792,11 @@ function nodeFrom(p,i){
   var ph=document.createElement('div'); ph.className='ph';
   var img=document.createElement('img');
   img.loading='lazy'; img.decoding='async';
-  img.alt='';
-  img.src=cdn(thumbOf(p));
-  bindCdnImg(img,thumbOf(p));
+  img.alt=p.title||'';
+  img.src=listSrc(p);                 // v2：画廊列表始终使用预览图
   ph.appendChild(img); fig.appendChild(ph);
   var cap=document.createElement('figcaption');
-  cap.innerHTML='<i>'+((i%photos.length)+1)+' / '+photos.length+'</i>';
+  cap.innerHTML='<i>'+((i%photos.length)+1)+' / '+photos.length+'</i>'+(p.title?'<em>'+esc(p.title)+'</em>':'');
   fig.appendChild(cap);
   fig.addEventListener('click',function(){ openLightbox(i); });
   fig.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openLightbox(i); } });
@@ -670,16 +834,31 @@ function setStagePlaying(on){
   b.innerHTML=on?ICON_PAUSE:ICON_PLAY;
   b.setAttribute('aria-label',on?'暂停自动播放':'继续自动播放');
 }
-/* 背景来源：后台自定义背景图（走 CDN）；没传/纯黑模式 → 无背景图，hero 本身是深黑底 */
+/* v2 背景三模式：black 纯黑 / white 纯白 / custom 自定义背景图（同域直出） */
 function applyBackdrop(){
   var bd=$('#stageBackdrop'); if(!bd) return;
+  var body=document.body;
+  body.classList.remove('mode-black','mode-white','mode-custom');
   if(state.bgMode==='custom' && state.customBgImage){
+    body.classList.add('mode-custom');
     bd.classList.add('raw');
-    cdnBackground(bd,state.customBgImage);
+    bd.style.backgroundImage="url('"+state.customBgImage+"')";
+  }else if(state.bgMode==='white'){
+    body.classList.add('mode-white');
+    bd.classList.remove('raw');
+    bd.style.backgroundImage='';
   }else{
+    body.classList.add('mode-black');
     bd.classList.remove('raw');
     bd.style.backgroundImage='';
   }
+  syncFxLevel();
+}
+/* 萤火虫浓度随背景模式自适应：白底收敛 / 自定义图中等 / 纯黑最显 */
+function syncFxLevel(){
+  var fx=$('#fx'); if(!fx) return;
+  var op=state.bgMode==='white' ? .3 : (state.bgMode==='custom' ? .55 : .85);
+  fx.style.opacity=state.fxEnabled?String(op):'0';
 }
 function stageTo(i){
   if(!photos.length) return;
@@ -688,8 +867,7 @@ function stageTo(i){
   for(var k=0;k<imgs.length;k++){
     if(k===stage.i){
       if(!imgs[k].getAttribute('src')){
-        imgs[k].setAttribute('src',cdn(photos[k].src));
-        bindCdnImg(imgs[k],photos[k].src);
+        imgs[k].setAttribute('src',listSrc(photos[k]));   // 首屏轮播使用预览图
       }
       imgs[k].classList.add('active');
     } else imgs[k].classList.remove('active');
@@ -703,7 +881,7 @@ function stageTo(i){
 function preloadStage(d){
   if(!photos.length) return;
   var j=(stage.i+d+photos.length)%photos.length;
-  var im=new Image(); im.src=cdn(photos[j].src);
+  var im=new Image(); im.src=listSrc(photos[j]);   // 预载相邻预览图
 }
 function stageStart(){
   if(stage.timer||reduced) return;
@@ -782,18 +960,17 @@ function showImage(){
   var p=photos[state.idx];
   lbImg.classList.remove('loaded','err');
   lbSpin.style.display='block';
-  var cdnFirst=true;
   lbImg.onload=function(){ lbSpin.style.display='none'; lbImg.classList.add('loaded'); };
   lbImg.onerror=function(){
-    if(cdnFirst && p.src){
-      cdnFirst=false;
-      lbImg.src=p.src;              // CDN 失败回退仓库相对路径
-      return;
-    }
     lbSpin.style.display='none'; lbImg.classList.add('err'); lbImg.alt='图片加载失败';
   };
-  lbImg.alt='';
-  lbImg.src=cdn(p.src);
+  lbImg.alt=p.title||'作品大图';
+  lbImg.src=fullSrc(p);             // v2：灯箱点开才加载原图（同域直出）
+  var meta=$('#lbMeta');
+  if(meta){
+    var html=(p.title?'<div class="m-title">'+esc(p.title)+'</div>':'')+(p.desc?'<div class="m-desc">'+esc(p.desc)+'</div>':'')+(p.params?'<div class="m-params">'+esc(p.params)+'</div>':'');
+    meta.innerHTML=html;
+  }
   $('#lbCount').innerHTML='<b>'+(state.idx+1)+'</b> / '+photos.length;
   preload(1); preload(-1);
 }
@@ -805,7 +982,7 @@ function stepLightbox(d){
 function preload(d){
   if(!photos.length) return;
   var j=(state.idx+d+photos.length)%photos.length;
-  var im=new Image(); im.src=cdn(photos[j].src);  // 预载相邻原图
+  var im=new Image(); im.src=fullSrc(photos[j]);  // 预载相邻原图（灯箱快速切换）
 }
 document.addEventListener('keydown',function(e){
   if(!state.open) return;
@@ -879,42 +1056,46 @@ function bindStatic(){
   }
 }
 
-/* ===== 光粒子浮尘（canvas 少量漂浮光点） ===== */
+/* ===== 萤火虫氛围（暖黄 · 柔和上浮 + 明暗呼吸，随背景深浅自适应） ===== */
 function initFx(){
   var cv=$('#fx'); if(!cv || reduced) return;
   var ctx=cv.getContext('2d'); if(!ctx) return;
   var W,H,parts=[],raf=null,run=true;
-  function resize(){
-    W=cv.width=innerWidth; H=cv.height=innerHeight;
-    seed();
-  }
+  function resize(){ W=cv.width=innerWidth; H=cv.height=innerHeight; seed(); }
   function seed(){
-    var want=Math.min(46,Math.max(14,Math.round(innerWidth*innerHeight/42000)));
+    var want=Math.min(40,Math.max(10,Math.round(innerWidth*innerHeight/52000)));
     parts=[];
     for(var i=0;i<want;i++){
       parts.push({
         x:Math.random()*W, y:Math.random()*H,
-        r:Math.random()*1.5+.35,
-        a:Math.random()*.45+.06,
-        vy:-(Math.random()*.16+.03),
-        vx:(Math.random()-.5)*.06,
-        p:Math.random()*Math.PI*2, ps:Math.random()*.02+.004
+        base:Math.random()*1.9+.9,
+        a:Math.random()*.5+.22,
+        vy:-(Math.random()*.2+.05),
+        ph:Math.random()*Math.PI*2, ws:Math.random()*.03+.012,
+        sway:Math.random()*Math.PI*2, sx:(Math.random()*.5-.25)
       });
     }
+  }
+  function glow(x,y,r,a){
+    ctx.beginPath(); ctx.arc(x,y,r*3.4,0,6.2832);
+    ctx.fillStyle='rgba(255,196,92,'+(a*.10).toFixed(3)+')'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,r*1.8,0,6.2832);
+    ctx.fillStyle='rgba(255,214,120,'+(a*.24).toFixed(3)+')'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,r*.92,0,6.2832);
+    ctx.fillStyle='rgba(255,238,178,'+(a*.95).toFixed(3)+')'; ctx.fill();
   }
   function frame(){
     if(!run) return;
     ctx.clearRect(0,0,W,H);
     for(var i=0;i<parts.length;i++){
       var q=parts[i];
-      q.y+=q.vy; q.x+=q.vx; q.p+=q.ps;
-      if(q.y<-4){ q.y=H+4; q.x=Math.random()*W; }
-      if(q.x<-4) q.x=W+4; if(q.x>W+4) q.x=-4;
-      var tw=.55+.45*Math.sin(q.p);
-      ctx.beginPath();
-      ctx.arc(q.x,q.y,q.r,0,6.2832);
-      ctx.fillStyle='rgba(255,255,255,'+(q.a*tw).toFixed(3)+')';
-      ctx.fill();
+      q.y+=q.vy; q.ph+=q.ws; q.sway+=.008;
+      q.x+=Math.sin(q.sway)*q.sx*.35;
+      if(q.y<-6){ q.y=H+6; q.x=Math.random()*W; }
+      if(q.x<-10) q.x=W+10; if(q.x>W+10) q.x=-10;
+      var tw=.42+.58*Math.sin(q.ph);
+      var a=q.a*tw;
+      glow(q.x,q.y,q.base*(.6+Math.sqrt(Math.max(a,0))*0.9),a);
     }
     raf=requestAnimationFrame(frame);
   }
@@ -926,15 +1107,25 @@ function initFx(){
   });
 }
 
-/* ===== 背景音乐 + 背景切换（右下浮动按钮） ===== */
+/* ===== 背景音乐 + 背景切换（右下浮动按钮 · v2 三模式循环） ===== */
 var audioEl=null,audioState='off';
 var ICON_MUSIC='<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+function bgOrder(){
+  var o=['black','white'];
+  if(state.customBgImage) o.push('custom');
+  return o;
+}
+function bgLabel(m){
+  if(m==='white') return '白色背景';
+  if(m==='custom') return '自定义背景';
+  return '黑色背景';
+}
 function initTools(){
   var mb=$('#ftMusic'), bb=$('#ftBg');
   if(state.musicUrl){ if(mb) mb.style.display='grid'; }
   else if(mb) mb.style.display='none';
-  if(state.customBgImage){ if(bb) bb.style.display='grid'; syncBgBtn(); }
-  else if(bb) bb.style.display='none';
+  if(bb) bb.style.display='grid';      // 黑/白恒可切换；后台传了自定义图则再加入 custom 档
+  syncBgBtn();
   if(mb && !mb.dataset.wired){
     mb.dataset.wired='1';
     mb.addEventListener('click',toggleMusic);
@@ -946,18 +1137,15 @@ function initTools(){
 }
 function syncBgBtn(){
   var bb=$('#ftBg'); if(!bb) return;
-  if(state.bgMode==='custom'){
-    bb.classList.add('on');
-    bb.setAttribute('aria-label','背景显示自定义图，点击切换为纯黑');
-    bb.title='背景：自定义图（点击纯黑）';
-  }else{
-    bb.classList.remove('on');
-    bb.setAttribute('aria-label','背景为纯黑，点击切换为自定义图');
-    bb.title='背景：纯黑（点击自定义图）';
-  }
+  var o=bgOrder(), i=o.indexOf(state.bgMode);
+  var next=o[(i+1)%o.length];
+  bb.classList.toggle('on',state.bgMode==='custom');
+  bb.setAttribute('aria-label','背景：'+bgLabel(state.bgMode)+'，点击切换到'+bgLabel(next));
+  bb.title='背景：'+bgLabel(state.bgMode)+' → '+bgLabel(next);
 }
 function toggleBgMode(){
-  state.bgMode = state.bgMode==='custom' ? 'black' : 'custom';
+  var o=bgOrder(), i=o.indexOf(state.bgMode);
+  state.bgMode=o[(i+1)%o.length];
   try{ localStorage.setItem('photo_bgMode',state.bgMode); }catch(e){}
   syncBgBtn();
   applyBackdrop();
@@ -1000,5 +1188,7 @@ function toggleMusic(){
 document.addEventListener('DOMContentLoaded',loadData);
 })();
 </script>
+<!-- Cloudflare Web Analytics：在下方 token 处填入你的 CF 站点 token；不需要时删除整段即可 -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "REPLACE_WITH_CF_ANALYTICS_TOKEN"}'></script>
 </body>
 </html>
