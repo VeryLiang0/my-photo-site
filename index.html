@@ -594,6 +594,40 @@ body.mode-white .works.viewer{background:#0b0b0b}
   #filmCursor{font-size:10px}
   .viewer-head-right{gap:8px}
 }
+/* ================= v5 主图胶片框 · 方形柔圆角 · 滚轮仅胶片 ================= */
+.viewer-figure{
+  position:relative;
+  display:grid;place-items:center;
+  margin:8px clamp(16px,4vw,64px) 12px;
+  background:#000;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
+  overflow:hidden;
+  min-height:min(42vh,420px);
+}
+.fperf{position:absolute;left:0;right:0;height:14px;pointer-events:none;z-index:3;background-color:#e9e6db;background-image:radial-gradient(circle 4.5px at 14px 7px,#0b0b0b 4.5px,transparent 5.2px);background-size:30px 14px;background-repeat:repeat-x;opacity:.92}
+.fperf-top{top:0}
+.fperf-bottom{bottom:0}
+.viewer-figure{padding:16px 8px}
+#viewerImg{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;display:block;opacity:1 !important;transition:opacity .4s}
+.viewer-figure.is-loading::after{content:"";position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-25px 0 0 -25px;border:2px solid rgba(255,255,255,.18);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;pointer-events:none;z-index:4;background:rgba(0,0,0,.25);border-radius:50%}
+/* —— 控件：方形 · 大柔圆角 —— */
+.ctl-play,.ctl-down{width:auto;min-width:44px;height:42px;padding:0 16px;border-radius:12px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.07);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--num);font-size:11.5px;letter-spacing:.16em;cursor:pointer;transition:all .25s;box-shadow:inset 0 0 0 0 rgba(255,255,255,0)}
+.ctl-play:hover,.ctl-down:hover{border-color:rgba(255,255,255,.85);background:rgba(255,255,255,.16)}
+.ctl-play svg{width:15px;height:15px;fill:currentColor}
+#filmCursor{border-radius:9px}
+.viewer-head .eyebrow{font-size:11.5px;color:rgba(255,255,255,.5);padding:6px 0}
+.works.viewer .g-tab{border-radius:9px}
+.film-frame img{border-radius:6px}
+.film-frame.is-on::after{inset:-2px;border:1.5px solid rgba(255,255,255,.92);border-radius:8px;box-shadow:0 0 0 2px rgba(0,0,0,.35),0 0 16px rgba(255,255,255,.4)}
+#filmRange::-webkit-slider-thumb{width:15px;height:15px;border-radius:5px;background:#fff;margin-top:-6px;box-shadow:0 0 10px rgba(255,255,255,.6)}
+#filmRange::-moz-range-thumb{width:15px;height:15px;border-radius:5px}
+#filmRange::-webkit-slider-runnable-track{height:3px;background:rgba(255,255,255,.25)}
+@media(max-width:479px){
+  .viewer-figure{margin:4px 10px 8px;min-height:36vh}
+  .ctl-play,.ctl-down{min-width:38px;height:38px;padding:0 12px;border-radius:10px}
+}
 </style>
 </head>
 <body>
@@ -706,6 +740,8 @@ body.mode-white .works.viewer{background:#0b0b0b}
       </div>
       <div class="wrap viewer-tabs" id="tabsWrap"><div id="groupTabs"></div></div>
       <div class="viewer-figure" id="viewerFigure">
+        <span class="fperf fperf-top" aria-hidden="true"></span>
+        <span class="fperf fperf-bottom" aria-hidden="true"></span>
         <img id="viewerImg" alt="">
         <div class="viewer-empty" id="viewerEmpty" style="display:none">
           还没有作品 —— 打开 <a href="editor.html">后台管理</a> 上传图片，这里将展示你的作品。
@@ -998,7 +1034,7 @@ function nodeFrom(p,i){
   return fig;
 }
 /* ===== v3 作品查看器：中央大图 + 胶片进度条 + 滑杆 + 自动轮播 + 滚轮 ===== */
-var viewer={i:0,seekTimer:null,autoTimer:null,autoOn:false,sliderTimer:null,lastWheel:0};
+var viewer={i:0,seekTimer:null,autoTimer:null,autoOn:false,sliderTimer:null,lastWheel:0,userActiveUntil:0};
 function renderViewer(){
   var track=$('#filmTrack');
   var fig=$('#viewerFigure'), emptyEl=$('#viewerEmpty'), strip=$('#filmstrip');
@@ -1069,7 +1105,7 @@ function scrollFilmCenter(i){
 }
 function viewerStep(d){
   if(photos.length<1) return;
-  stopAuto();
+  viewer.userActiveUntil=Date.now()+1400;    // 手动选片不终止自动播放，仅让位片刻
   viewerGo(viewer.i+d,true);
 }
 /* —— 自动轮播 —— */
@@ -1088,6 +1124,7 @@ function scheduleAutoTick(){
 function autoTick(){
   viewer.autoTimer=null;
   if(!viewer.autoOn) return;
+  if(Date.now()<viewer.userActiveUntil){ scheduleAutoTick(); return; }  // 交互中暂缓一步，之后自动继续
   if(isViewerVisible() && !document.hidden && photos.length>1){
     viewerGo(viewer.i+1,true);
   }
@@ -1109,7 +1146,6 @@ function bindViewer(){
   if(fig && !fig.dataset.v){
     fig.dataset.v='1';
     fig.addEventListener('click',function(){ if(photos.length) openLightbox(viewer.i); });
-    fig.addEventListener('wheel',onViewerWheel,{passive:false});
   }
   var strip=$('#filmstrip');
   if(strip && !strip.dataset.w){ strip.dataset.w='1'; strip.addEventListener('wheel',onViewerWheel,{passive:false}); }
@@ -1118,7 +1154,7 @@ function bindViewer(){
   var drag=null;
   track.addEventListener('pointerdown',function(e){
     if(e.pointerType==='mouse' && e.button!==0) return;
-    stopAuto();
+    viewer.userActiveUntil=Date.now()+1600;   // 拖动期间自动播放让位，但不终止
     drag={x:e.clientX,left:track.scrollLeft,moved:false};
     try{ track.setPointerCapture(e.pointerId); }catch(err){}
   });
@@ -1143,9 +1179,9 @@ function bindViewer(){
   var rg=$('#filmRange');
   if(rg && !rg.dataset.w){
     rg.dataset.w='1';
-    rg.addEventListener('pointerdown',function(){ stopAuto(); });
+    rg.addEventListener('pointerdown',function(){ viewer.userActiveUntil=Date.now()+1600; });
     rg.addEventListener('input',function(){
-      stopAuto();
+      viewer.userActiveUntil=Date.now()+1600;
       if(viewer.sliderTimer) clearTimeout(viewer.sliderTimer);
       var v=parseInt(rg.value,10)||0;
       viewer.sliderTimer=setTimeout(function(){ viewer.sliderTimer=null; viewerGo(v,false); },80);
@@ -1160,7 +1196,6 @@ function bindViewer(){
   if(down && !down.dataset.w){
     down.dataset.w='1';
     down.addEventListener('click',function(){
-      stopAuto();
       var rest=Math.max(120, document.documentElement.scrollHeight-(window.scrollY+innerHeight));
       window.scrollBy({top:Math.min(innerHeight*0.92,rest),behavior:'smooth'});
     });
@@ -1171,9 +1206,9 @@ function onViewerWheel(e){
   if(!photos.length || photos.length<1) return;
   e.preventDefault();
   var now=Date.now();
-  if(now-viewer.lastWheel<180) return;
+  if(now-viewer.lastWheel<160) return;
   viewer.lastWheel=now;
-  stopAuto();
+  viewer.userActiveUntil=Date.now()+1400;    // 滚轮只作用于胶片条，不影响自动播放与页面滚动
   viewerGo(viewer.i+(e.deltaY>0?1:-1),true);
 }
 /* 停滞后按视觉中心帧更新大图（拖动即停即选） */
