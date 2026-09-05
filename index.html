@@ -628,6 +628,14 @@ body.mode-white .works.viewer{background:#0b0b0b}
   .viewer-figure{margin:4px 10px 8px;min-height:36vh}
   .ctl-play,.ctl-down{min-width:38px;height:38px;padding:0 12px;border-radius:10px}
 }
+/* ================= v6 显示加固：模糊缩略背景 + 中央选片线 + 主图区收小 ================= */
+.works.viewer{height:min(88svh,920px);min-height:620px;grid-template-rows:minmax(0,1fr) clamp(116px,19vh,168px) auto}
+.viewer-figure{min-height:min(30vh,320px);background:#000}
+.viewer-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;filter:blur(28px) saturate(1.06);transform:scale(1.12);opacity:.5;pointer-events:none}
+#viewerImg{position:relative;z-index:1;box-shadow:0 8px 26px rgba(0,0,0,.38)}
+.film-caret{position:absolute;top:12px;bottom:12px;left:50%;width:2px;transform:translateX(-50%);background:rgba(255,255,255,.95);box-shadow:0 0 12px rgba(255,255,255,.85);pointer-events:none;z-index:4;display:none}
+@media(hover:hover){.film-caret{display:block}}
+@media(max-width:920px){.works.viewer{height:calc(100svh - 2px)}}
 </style>
 </head>
 <body>
@@ -740,6 +748,7 @@ body.mode-white .works.viewer{background:#0b0b0b}
       </div>
       <div class="wrap viewer-tabs" id="tabsWrap"><div id="groupTabs"></div></div>
       <div class="viewer-figure" id="viewerFigure">
+        <div class="viewer-bg" id="viewerBg" aria-hidden="true"></div>
         <span class="fperf fperf-top" aria-hidden="true"></span>
         <span class="fperf fperf-bottom" aria-hidden="true"></span>
         <img id="viewerImg" alt="">
@@ -751,6 +760,7 @@ body.mode-white .works.viewer{background:#0b0b0b}
     <div class="filmstrip" id="filmstrip">
       <div class="fp fp-top" aria-hidden="true"></div>
       <div class="filmstrip-track" id="filmTrack"></div>
+      <span class="film-caret" aria-hidden="true"></span>
       <div class="fp fp-bottom" aria-hidden="true"></div>
     </div>
     <div class="film-ctl">
@@ -1073,19 +1083,8 @@ function renderViewer(){
 function viewerGo(i,align){
   if(!photos.length) return;
   i=((i%photos.length)+photos.length)%photos.length;
-  var changed=i!==viewer.i;
   viewer.i=i;
   var p=photos[i];
-  var vimg=$('#viewerImg'), fig=$('#viewerFigure');
-  if(fig && (changed || !vimg.getAttribute('src'))){
-    fig.classList.add('is-loading');
-    var t=setTimeout(clearLoad,6000);     // 兜底：即使加载异常也移除遮罩
-    function clearLoad(){ if(fig) fig.classList.remove('is-loading'); }
-    vimg.onload=function(){ clearTimeout(t); clearLoad(); };
-    vimg.onerror=function(){ clearTimeout(t); clearLoad(); };
-    vimg.alt=p.title||'作品大图';
-    vimg.src=heroSrc(p);                  // 大图：高清预览优先，无预览用原图
-  }
   var vc=$('#viewerCount'); if(vc) vc.textContent=(i+1)+' / '+photos.length;
   var rg=$('#filmRange'); if(rg) rg.value=i;
   var cc=$('#filmCursor'); if(cc) cc.textContent=(i+1)+' / '+photos.length;
@@ -1094,6 +1093,21 @@ function viewerGo(i,align){
   var curF=document.querySelector('.film-frame[data-fi="'+i+'"]');
   if(curF) curF.classList.add('is-on');
   if(align) scrollFilmCenter(i);
+  /* 背景：当前作品缩略图即时模糊填充 —— 高清图未就绪时主图区也始终有画面 */
+  var bg=$('#viewerBg');
+  if(bg) bg.style.backgroundImage="url('"+listSrc(p)+"')";
+  /* 前景大图：先预加载成功再替换 src，杜绝空白/闪烁/无法显示 */
+  var vimg=$('#viewerImg'), fig=$('#viewerFigure');
+  var want=heroSrc(p);
+  if(vimg.getAttribute('src')!==want){
+    if(fig) fig.classList.add('is-loading');
+    var t=setTimeout(done,9000);
+    function done(){ clearTimeout(t); if(fig) fig.classList.remove('is-loading'); }
+    var tmp=new Image();
+    tmp.onload=function(){ vimg.alt=p.title||'作品大图'; vimg.src=want; done(); };
+    tmp.onerror=function(){ done(); };
+    tmp.src=want;
+  }
 }
 function scrollFilmCenter(i){
   var track=$('#filmTrack'); if(!track) return;
