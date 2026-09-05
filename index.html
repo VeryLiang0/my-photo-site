@@ -636,6 +636,13 @@ body.mode-white .works.viewer{background:#0b0b0b}
 .film-caret{position:absolute;top:12px;bottom:12px;left:50%;width:2px;transform:translateX(-50%);background:rgba(255,255,255,.95);box-shadow:0 0 12px rgba(255,255,255,.85);pointer-events:none;z-index:4;display:none}
 @media(hover:hover){.film-caret{display:block}}
 @media(max-width:920px){.works.viewer{height:calc(100svh - 2px)}}
+/* ================= v7 主图区 = 首页灯箱的放大常驻版 ================= */
+.viewer-figure{margin:4px clamp(6px,2vw,22px) 2px;border-radius:0;border:none;box-shadow:none;background:#000;padding:8px 4px;min-height:0}
+.fperf{display:none}
+.viewer-bg{opacity:.28}
+#viewerImg{box-shadow:none;cursor:zoom-in}
+.viewer-figure.is-loading::after{z-index:5}
+@media(max-width:479px){.viewer-figure{padding:6px 2px}}
 </style>
 </head>
 <body>
@@ -1044,7 +1051,7 @@ function nodeFrom(p,i){
   return fig;
 }
 /* ===== v3 作品查看器：中央大图 + 胶片进度条 + 滑杆 + 自动轮播 + 滚轮 ===== */
-var viewer={i:0,seekTimer:null,autoTimer:null,autoOn:false,sliderTimer:null,lastWheel:0,userActiveUntil:0};
+var viewer={i:0,seekTimer:null,autoTimer:null,autoOn:false,sliderTimer:null,lastWheel:0,userActiveUntil:0,scrollSuppressUntil:0};
 function renderViewer(){
   var track=$('#filmTrack');
   var fig=$('#viewerFigure'), emptyEl=$('#viewerEmpty'), strip=$('#filmstrip');
@@ -1113,6 +1120,7 @@ function scrollFilmCenter(i){
   var track=$('#filmTrack'); if(!track) return;
   var fr=document.querySelector('.film-frame[data-fi="'+i+'"]');
   if(!fr) return;
+  viewer.scrollSuppressUntil=Date.now()+750;   // 程序滚动期间禁止“中心帧seek”反噬，保证点击选中有效
   var left=fr.offsetLeft-(track.clientWidth-fr.offsetWidth)/2;
   try{ track.scrollTo({left:Math.max(0,left),behavior:'smooth'}); }
   catch(e){ track.scrollLeft=Math.max(0,left); }
@@ -1159,7 +1167,31 @@ function bindViewer(){
   var fig=$('#viewerFigure');
   if(fig && !fig.dataset.v){
     fig.dataset.v='1';
-    fig.addEventListener('click',function(){ if(photos.length) openLightbox(viewer.i); });
+    fig.addEventListener('click',function(e){
+      if(!photos.length) return;
+      if(fig.__swipe){ fig.__swipe=false; return; }
+      var img=$('#viewerImg');
+      if(e.target===img){ openLightbox(viewer.i); return; }        // 点图 → 全屏灯箱看原图
+      var rr=fig.getBoundingClientRect();                           // 点左右空白 → 上一张/下一张
+      var x=(e.clientX||0)-rr.left;
+      viewer.userActiveUntil=Date.now()+1400;
+      viewerGo(viewer.i+(x<rr.width/2?-1:1),true);
+    });
+    fig.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1) return;
+      fig.__sx=e.touches[0].clientX; fig.__sy=e.touches[0].clientY;
+    },{passive:true});
+    fig.addEventListener('touchend',function(e){
+      if(fig.__sx==null) return;
+      var dx=e.changedTouches[0].clientX-fig.__sx;
+      var dy=e.changedTouches[0].clientY-fig.__sy;
+      if(Math.abs(dx)>44 && Math.abs(dx)>Math.abs(dy)*1.3){
+        fig.__swipe=true; setTimeout(function(){ fig.__swipe=false; },420);
+        viewer.userActiveUntil=Date.now()+1400;
+        viewerGo(viewer.i+(dx<0?1:-1),true);
+      }
+      fig.__sx=null; fig.__sy=null;
+    },{passive:true});
   }
   var strip=$('#filmstrip');
   if(strip && !strip.dataset.w){ strip.dataset.w='1'; strip.addEventListener('wheel',onViewerWheel,{passive:false}); }
@@ -1230,6 +1262,8 @@ function scheduleFromScroll(){
   var track=$('#filmTrack');
   if(!track) return;
   if(viewer.seekTimer) return;
+  if(Date.now()<viewer.scrollSuppressUntil) return;   // 程序对齐滚动产生的 scroll 不参与中心选中
+  
   viewer.seekTimer=setTimeout(function(){
     viewer.seekTimer=null;
     if(!track || !track.isConnected) return;
