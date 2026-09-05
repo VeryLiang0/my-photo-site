@@ -520,6 +520,55 @@ body.mode-white #railCount b{color:#111}
   #artBox.is-single .pcell{height:min(60vh,680px)}
 }
 .offer-card .note{white-space:pre-wrap}
+/* ================= v3 作品查看器：单屏大图 + 胶片式拖动进度条 ================= */
+.works.viewer{
+  --bg:#0b0b0b;--surface:#151515;--txt:#f3f3ef;--txt-2:#d3d3cb;--muted:#9a9a90;--line:rgba(255,255,255,.14);--line-strong:rgba(255,255,255,.7);--bar:#fff;
+  background:#0b0b0b;color:var(--txt);
+  height:100svh;min-height:580px;display:grid;
+  grid-template-rows:minmax(0,1fr) clamp(118px,20vh,190px);
+  padding:0;overflow:hidden;scroll-margin-top:0;
+}
+.viewer-stage{position:relative;display:flex;flex-direction:column;min-height:0;z-index:1}
+.viewer-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:64px clamp(20px,4vw,60px) 4px}
+.viewer-head .eyebrow{color:rgba(255,255,255,.55)}
+#viewerCount{font-family:var(--num);font-size:12px;letter-spacing:.2em;color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.2);padding:5px 13px;border-radius:99px}
+.works.viewer .viewer-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:8px auto 0;max-width:var(--width)}
+.works.viewer #tabsWrap.hide{display:none}
+.works.viewer .g-tab{background:rgba(255,255,255,.05);color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.28);padding:6px 17px;font-size:12px}
+.works.viewer .g-tab:hover{border-color:#fff}
+.works.viewer .g-tab.is-on{background:#fff;color:#000;border-color:#fff}
+.viewer-figure{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;margin:0 clamp(12px,3vw,44px);cursor:zoom-in}
+#viewerImg{max-width:100%;max-height:100%;object-fit:contain;opacity:0;transition:opacity .5s var(--ease),transform .7s var(--ease)}
+#viewerImg.on{opacity:1}
+.viewer-figure.is-loading::after{content:"";position:absolute;left:50%;top:50%;width:42px;height:42px;margin:-23px 0 0 -23px;border:2px solid rgba(255,255,255,.16);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;pointer-events:none}
+.viewer-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);text-align:center;padding:0 22px;font-size:15px}
+.viewer-empty a{color:#fff;text-decoration:underline;text-underline-offset:4px}
+/* —— 底部胶片条 —— */
+.filmstrip{position:relative;background:#000;border-top:1px solid rgba(255,255,255,.14);display:flex;flex-direction:column;min-height:0}
+.fp{flex:none;height:12px;background-color:#ece9df;background-image:radial-gradient(circle 4px at 12px 6px,#0b0b0b 4px,transparent 4.8px);background-size:26px 12px;background-repeat:repeat-x;z-index:2}
+.fp-top{border-bottom:1px solid rgba(0,0,0,.5)}
+.fp-bottom{border-top:1px solid rgba(0,0,0,.5)}
+.filmstrip-track{flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;display:flex;align-items:center;gap:14px;padding:4px clamp(10px,3vw,44px) 4px;cursor:grab;user-select:none;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.filmstrip-track::-webkit-scrollbar{display:none}
+.filmstrip-track:active{cursor:grabbing}
+.film-frame{flex:none;position:relative;height:calc(100% - 10px);display:flex;align-items:center;justify-content:center;padding:0;border:none;background:transparent;cursor:pointer;opacity:.55;transition:opacity .25s,transform .25s}
+.film-frame img{height:100%;max-width:56vw;object-fit:contain;pointer-events:none}
+.film-frame:hover{opacity:.9}
+.film-frame.is-on{opacity:1;transform:scale(1.05)}
+.film-frame.is-on::after{content:"";position:absolute;inset:-2px;border:2px solid #fff;border-radius:2px;pointer-events:none;box-shadow:0 0 10px rgba(255,255,255,.35)}
+body.mode-white .works.viewer{background:#0b0b0b}
+@media(max-width:920px){
+  .works.viewer{grid-template-rows:minmax(0,1fr) clamp(96px,18vh,150px)}
+  .viewer-head{padding-top:52px}
+  .viewer-head .eyebrow{font-size:10px}
+}
+@media(max-width:479px){
+  .works.viewer{height:calc(100svh - 2px);min-height:520px}
+  .fp{height:9px}
+  .viewer-head .eyebrow{display:none}
+  .viewer-head{justify-content:flex-end;padding-top:48px}
+  .filmstrip-track{gap:10px}
+}
 </style>
 </head>
 <body>
@@ -620,32 +669,25 @@ body.mode-white #railCount b{color:#111}
     <div class="scroll-cue" aria-hidden="true"><span class="line"></span><span>滚动浏览</span></div>
   </section>
 
-  <!-- ===== 作品区：浅色标题 + 深色横向循环带 ===== -->
-  <section class="works" id="works">
-    <div class="wrap">
-      <div class="sec-head">
-        <div>
-          <div class="eyebrow">01 / GALLERY</div>
-          <h2 class="reveal">作品 · 循环浏览</h2>
-        </div>
-        <div class="sec-note reveal d1">
-          共 <b id="totalNum">0</b> 幅 · 自动滚动 · 点击查看大图<br>悬停暂停 · 新图上传后自动加入
+  <!-- ===== 作品查看器：单屏 · 中央大图 + 底部胶片式可拖动进度条 ===== -->
+  <section class="works viewer" id="works">
+    <div class="viewer-stage">
+      <div class="viewer-head">
+        <div class="eyebrow">GALLERY · 拖动下方胶片快进 / 倒退选片</div>
+        <div class="num" id="viewerCount">0 / 0</div>
+      </div>
+      <div class="wrap viewer-tabs" id="tabsWrap"><div id="groupTabs"></div></div>
+      <div class="viewer-figure" id="viewerFigure">
+        <img id="viewerImg" alt="">
+        <div class="viewer-empty" id="viewerEmpty" style="display:none">
+          还没有作品 —— 打开 <a href="editor.html">后台管理</a> 上传图片，这里将展示你的作品。
         </div>
       </div>
     </div>
-    <div class="wrap" id="tabsWrap"><div id="groupTabs"></div></div>
-
-    <div class="loopband">
-      <div class="band-cap"><span>横向循环 · 按原图比例完整展示</span><span class="num" id="capCount">12 WORKS</span></div>
-      <div class="marquee" id="marqueeWrap">
-        <div class="marquee-track" id="marqueeTrack"></div>
-      </div>
-    </div>
-
-    <div class="wrap">
-      <div class="empty" id="emptyMsg" style="display:none">
-        还没有作品 —— 打开 <a href="editor.html">后台管理</a> 上传图片，新作品会自动出现在这里与首页轮播中。
-      </div>
+    <div class="filmstrip" id="filmstrip">
+      <div class="fp fp-top" aria-hidden="true"></div>
+      <div class="filmstrip-track" id="filmTrack"></div>
+      <div class="fp fp-bottom" aria-hidden="true"></div>
     </div>
   </section>
 
@@ -821,15 +863,13 @@ function visiblePhotos(){
 function renderAll(){
   photos=visiblePhotos();
   var n=photos.length;
-  $('#photoCount').textContent=n;
-  $('#totalNum').textContent=n;
-  $('#capCount').textContent=n+' WORKS';
+  var pc=$('#photoCount'); if(pc) pc.textContent=n;
   injectText();
   renderNotice();
   renderGroups();
   renderPricing();
   buildStage();
-  renderMarquee();
+  renderViewer();
   initLightbox();
   bindStatic();
   initFx();
@@ -871,11 +911,9 @@ function setGroup(id){
   photos=visiblePhotos();
   renderGroups();
   var n=photos.length;
-  $('#photoCount').textContent=n;
-  $('#totalNum').textContent=n;
-  $('#capCount').textContent=n+' WORKS';
+  var pc=$('#photoCount'); if(pc) pc.textContent=n;
   buildStage();
-  renderMarquee();
+  renderViewer();
   applyBackdrop();
 }
 /* ===== v2 约拍报价区（后台 offers 为空时整块隐藏） ===== */
@@ -923,6 +961,106 @@ function nodeFrom(p,i){
   fig.addEventListener('click',function(){ openLightbox(i); });
   fig.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openLightbox(i); } });
   return fig;
+}
+/* ===== v3 作品查看器：中央大图 + 底部胶片拖动进度条 ===== */
+var viewer={i:0,seekTimer:null};
+function renderViewer(){
+  var track=$('#filmTrack');
+  var fig=$('#viewerFigure'), emptyEl=$('#viewerEmpty'), strip=$('#filmstrip');
+  if(!track || !fig) return;
+  track.innerHTML='';
+  if(!photos.length){
+    fig.style.display='none'; strip.style.display='none';
+    if(emptyEl) emptyEl.style.display='flex';
+    var vc=$('#viewerCount'); if(vc) vc.textContent='0 / 0';
+    return;
+  }
+  fig.style.display='flex'; strip.style.display='flex';
+  if(emptyEl) emptyEl.style.display='none';
+  photos.forEach(function(p,i){
+    var fr=document.createElement('button');
+    fr.type='button';
+    fr.className='film-frame';
+    fr.setAttribute('data-fi',i);
+    fr.setAttribute('aria-label','查看第 '+(i+1)+' 幅');
+    var im=document.createElement('img');
+    im.loading='lazy'; im.decoding='async'; im.alt='';
+    im.src=listSrc(p);
+    fr.appendChild(im);
+    fr.addEventListener('click',function(){ viewerGo(i,true); });
+    track.appendChild(fr);
+  });
+  bindViewer();
+  viewer.i=0;
+  viewerGo(0,false);
+}
+function viewerGo(i,fromTap){
+  if(!photos.length) return;
+  i=((i%photos.length)+photos.length)%photos.length;
+  var changed=i!==viewer.i;
+  viewer.i=i;
+  var p=photos[i];
+  var vimg=$('#viewerImg'), fig=$('#viewerFigure');
+  if(changed || !vimg.getAttribute('src')){
+    fig.classList.add('is-loading');
+    vimg.classList.remove('on');
+    var done=function(){ fig.classList.remove('is-loading'); };
+    vimg.onload=function(){ vimg.classList.add('on'); done(); };
+    vimg.onerror=function(){ vimg.classList.add('on'); done(); };
+    vimg.alt=p.title||'作品大图';
+    vimg.src=heroSrc(p);           // 大图：高清预览优先，无预览用原图
+  }
+  var vc=$('#viewerCount'); if(vc) vc.textContent=(i+1)+' / '+photos.length;
+  var prev=document.querySelector('#filmTrack .film-frame.is-on');
+  if(prev) prev.classList.remove('is-on');
+  var cur=document.querySelector('.film-frame[data-fi="'+i+'"]');
+  if(cur) cur.classList.add('is-on');
+  if(fromTap && cur && cur.scrollIntoView){ cur.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'}); }
+}
+function viewerStep(d){
+  if(photos.length) viewerGo(viewer.i+d,true);
+}
+function bindViewer(){
+  var fig=$('#viewerFigure');
+  if(fig && !fig.dataset.v){ fig.dataset.v='1'; fig.addEventListener('click',function(){ if(photos.length) openLightbox(viewer.i); }); }
+  var track=$('#filmTrack'); if(!track || track.dataset.v) return;
+  track.dataset.v='1';
+  var drag=null;
+  track.addEventListener('pointerdown',function(e){
+    if(e.button!==undefined && e.button!==0 && e.pointerType==='mouse') return;
+    drag={x:e.clientX,left:track.scrollLeft,moved:false};
+    try{ track.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  track.addEventListener('pointermove',function(e){
+    if(!drag) return;
+    var dx=e.clientX-drag.x;
+    track.scrollLeft=drag.left-dx;
+    if(Math.abs(dx)>5) drag.moved=true;
+  });
+  function endDrag(){ if(!drag) return; var was=drag.moved; drag=null; if(was) scheduleFromScroll(); }
+  track.addEventListener('pointerup',endDrag);
+  track.addEventListener('pointercancel',endDrag);
+  track.addEventListener('scroll',scheduleFromScroll,{passive:true});
+}
+/* 停滞后按视觉中心帧更新大图（拖动即停即选） */
+function scheduleFromScroll(){
+  var track=$('#filmTrack');
+  if(!track) return;
+  if(viewer.seekTimer) return;
+  viewer.seekTimer=setTimeout(function(){
+    viewer.seekTimer=null;
+    if(!track || !track.isConnected) return;
+    var frames=track.querySelectorAll('.film-frame');
+    if(!frames.length) return;
+    var rc=track.getBoundingClientRect(), cx=rc.left+rc.width/2;
+    var best=0,bd=1e18;
+    for(var k=0;k<frames.length;k++){
+      var rr=frames[k].getBoundingClientRect();
+      var d=Math.abs((rr.left+rr.width/2)-cx);
+      if(d<bd){bd=d;best=k;}
+    }
+    viewerGo(best,false);
+  },90);
 }
 function renderMarquee(){
   var track=$('#marqueeTrack'), wrapEl=$('#marqueeWrap'), emptyEl=$('#emptyMsg');
@@ -1141,8 +1279,15 @@ function bindStageControls(){
   },{passive:true});
   document.addEventListener('keydown',function(e){
     if(state.open) return;                 // 灯箱打开时方向键归灯箱处理
-    if(e.key==='ArrowRight') stageStep(1);
-    else if(e.key==='ArrowLeft') stageStep(-1);
+    var k=e.key;
+    if(k!=='ArrowRight' && k!=='ArrowLeft') return;
+    var ws=document.getElementById('works');
+    if(ws){
+      var rc=ws.getBoundingClientRect();
+      var inViewer=rc.bottom>0 && rc.top<innerHeight*0.7;
+      if(inViewer){ viewerStep(k==='ArrowRight'?1:-1); return; }
+    }
+    stageStep(k==='ArrowRight'?1:-1);
   });
 }
 
