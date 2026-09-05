@@ -569,6 +569,31 @@ body.mode-white .works.viewer{background:#0b0b0b}
   .viewer-head{justify-content:flex-end;padding-top:48px}
   .filmstrip-track{gap:10px}
 }
+/* ================= v4 查看器增强：滑杆 + 自动轮播 + 大图兜底 ================= */
+.works.viewer{grid-template-rows:minmax(0,1fr) clamp(88px,15vh,140px) auto}
+.viewer-figure{min-height:min(38vh,340px)}
+.viewer-figure #viewerImg{opacity:1;max-height:min(70vh,860px)}
+.viewer-figure.is-loading #viewerImg{opacity:.25}
+.viewer-head-right{display:flex;align-items:center;gap:12px}
+.ctl-down{font-family:var(--num);font-size:11px;letter-spacing:.14em;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:7px 15px;background:rgba(255,255,255,.05);cursor:pointer;transition:.25s}
+.ctl-down:hover{border-color:#fff;background:rgba(255,255,255,.16)}
+.filmstrip-track{position:relative}
+.film-ctl{display:flex;align-items:center;gap:16px;padding:7px clamp(12px,3vw,40px) 9px;background:#050505;border-top:1px solid rgba(255,255,255,.12)}
+.ctl-play{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:#fff;display:grid;place-items:center;cursor:pointer;transition:.25s}
+.ctl-play:hover{border-color:#fff;background:rgba(255,255,255,.16)}
+.ctl-play svg{width:15px;height:15px;fill:currentColor}
+#filmRange{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;margin:0;padding:0}
+#filmRange::-webkit-slider-runnable-track{height:3px;border-radius:99px;background:rgba(255,255,255,.24)}
+#filmRange::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;margin-top:-6.5px;border:none;box-shadow:0 0 8px rgba(255,255,255,.55)}
+#filmRange::-moz-range-track{height:3px;border-radius:99px;background:rgba(255,255,255,.24)}
+#filmRange::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:none}
+#filmCursor{font-family:var(--num);font-size:12px;letter-spacing:.18em;color:rgba(255,255,255,.9);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);padding:5px 12px;border-radius:99px;flex:none}
+@media(max-width:479px){
+  .film-ctl{gap:10px;padding:6px 10px 8px}
+  .ctl-play{width:34px;height:34px}
+  #filmCursor{font-size:10px}
+  .viewer-head-right{gap:8px}
+}
 </style>
 </head>
 <body>
@@ -673,8 +698,11 @@ body.mode-white .works.viewer{background:#0b0b0b}
   <section class="works viewer" id="works">
     <div class="viewer-stage">
       <div class="viewer-head">
-        <div class="eyebrow">GALLERY · 拖动下方胶片快进 / 倒退选片</div>
-        <div class="num" id="viewerCount">0 / 0</div>
+        <div class="eyebrow">GALLERY · 拖动胶片 / 滑杆或滚动滚轮选片</div>
+        <div class="viewer-head-right">
+          <button type="button" class="ctl-down" id="viewerDown" aria-label="继续向下浏览">↓ 继续浏览</button>
+          <div class="num" id="viewerCount">0 / 0</div>
+        </div>
       </div>
       <div class="wrap viewer-tabs" id="tabsWrap"><div id="groupTabs"></div></div>
       <div class="viewer-figure" id="viewerFigure">
@@ -688,6 +716,13 @@ body.mode-white .works.viewer{background:#0b0b0b}
       <div class="fp fp-top" aria-hidden="true"></div>
       <div class="filmstrip-track" id="filmTrack"></div>
       <div class="fp fp-bottom" aria-hidden="true"></div>
+    </div>
+    <div class="film-ctl">
+      <button type="button" class="ctl-play" id="filmPlay" aria-label="暂停自动播放">
+        <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+      </button>
+      <input type="range" id="filmRange" min="0" max="0" value="0" step="1" aria-label="轮播进度">
+      <span class="num" id="filmCursor">1 / 0</span>
     </div>
   </section>
 
@@ -962,17 +997,20 @@ function nodeFrom(p,i){
   fig.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openLightbox(i); } });
   return fig;
 }
-/* ===== v3 作品查看器：中央大图 + 底部胶片拖动进度条 ===== */
-var viewer={i:0,seekTimer:null};
+/* ===== v3 作品查看器：中央大图 + 胶片进度条 + 滑杆 + 自动轮播 + 滚轮 ===== */
+var viewer={i:0,seekTimer:null,autoTimer:null,autoOn:false,sliderTimer:null,lastWheel:0};
 function renderViewer(){
   var track=$('#filmTrack');
   var fig=$('#viewerFigure'), emptyEl=$('#viewerEmpty'), strip=$('#filmstrip');
   if(!track || !fig) return;
   track.innerHTML='';
+  var rg=$('#filmRange'), cur=$('#filmCursor');
   if(!photos.length){
     fig.style.display='none'; strip.style.display='none';
     if(emptyEl) emptyEl.style.display='flex';
     var vc=$('#viewerCount'); if(vc) vc.textContent='0 / 0';
+    if(rg){ rg.min=0; rg.max=0; rg.value=0; }
+    if(cur) cur.textContent='0 / 0';
     return;
   }
   fig.style.display='flex'; strip.style.display='flex';
@@ -987,47 +1025,100 @@ function renderViewer(){
     im.loading='lazy'; im.decoding='async'; im.alt='';
     im.src=listSrc(p);
     fr.appendChild(im);
-    fr.addEventListener('click',function(){ viewerGo(i,true); });
+    fr.addEventListener('click',function(){ stopAuto(); viewerGo(i,true); });
     track.appendChild(fr);
   });
+  if(rg){ rg.min=0; rg.max=photos.length-1; rg.value=0; }
   bindViewer();
   viewer.i=0;
   viewerGo(0,false);
+  if(photos.length>=2){ viewer.autoOn=true; setPlayBtn(); scheduleAutoTick(); }
 }
-function viewerGo(i,fromTap){
+function viewerGo(i,align){
   if(!photos.length) return;
   i=((i%photos.length)+photos.length)%photos.length;
   var changed=i!==viewer.i;
   viewer.i=i;
   var p=photos[i];
   var vimg=$('#viewerImg'), fig=$('#viewerFigure');
-  if(changed || !vimg.getAttribute('src')){
+  if(fig && (changed || !vimg.getAttribute('src'))){
     fig.classList.add('is-loading');
-    vimg.classList.remove('on');
-    var done=function(){ fig.classList.remove('is-loading'); };
-    vimg.onload=function(){ vimg.classList.add('on'); done(); };
-    vimg.onerror=function(){ vimg.classList.add('on'); done(); };
+    var t=setTimeout(clearLoad,6000);     // 兜底：即使加载异常也移除遮罩
+    function clearLoad(){ if(fig) fig.classList.remove('is-loading'); }
+    vimg.onload=function(){ clearTimeout(t); clearLoad(); };
+    vimg.onerror=function(){ clearTimeout(t); clearLoad(); };
     vimg.alt=p.title||'作品大图';
-    vimg.src=heroSrc(p);           // 大图：高清预览优先，无预览用原图
+    vimg.src=heroSrc(p);                  // 大图：高清预览优先，无预览用原图
   }
   var vc=$('#viewerCount'); if(vc) vc.textContent=(i+1)+' / '+photos.length;
+  var rg=$('#filmRange'); if(rg) rg.value=i;
+  var cc=$('#filmCursor'); if(cc) cc.textContent=(i+1)+' / '+photos.length;
   var prev=document.querySelector('#filmTrack .film-frame.is-on');
   if(prev) prev.classList.remove('is-on');
-  var cur=document.querySelector('.film-frame[data-fi="'+i+'"]');
-  if(cur) cur.classList.add('is-on');
-  if(fromTap && cur && cur.scrollIntoView){ cur.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'}); }
+  var curF=document.querySelector('.film-frame[data-fi="'+i+'"]');
+  if(curF) curF.classList.add('is-on');
+  if(align) scrollFilmCenter(i);
+}
+function scrollFilmCenter(i){
+  var track=$('#filmTrack'); if(!track) return;
+  var fr=document.querySelector('.film-frame[data-fi="'+i+'"]');
+  if(!fr) return;
+  var left=fr.offsetLeft-(track.clientWidth-fr.offsetWidth)/2;
+  try{ track.scrollTo({left:Math.max(0,left),behavior:'smooth'}); }
+  catch(e){ track.scrollLeft=Math.max(0,left); }
 }
 function viewerStep(d){
-  if(photos.length) viewerGo(viewer.i+d,true);
+  if(photos.length<1) return;
+  stopAuto();
+  viewerGo(viewer.i+d,true);
+}
+/* —— 自动轮播 —— */
+function setPlayBtn(){
+  var b=$('#filmPlay'); if(!b) return;
+  b.innerHTML=viewer.autoOn
+    ? '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M8 5.2v13.6a1 1 0 0 0 1.53.85l11-6.8a1 1 0 0 0 0-1.7l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
+  b.setAttribute('aria-label',viewer.autoOn?'暂停自动播放':'开始自动播放');
+  b.setAttribute('title',viewer.autoOn?'暂停自动播放':'开始自动播放');
+}
+function scheduleAutoTick(){
+  if(viewer.autoTimer){ clearTimeout(viewer.autoTimer); viewer.autoTimer=null; }
+  viewer.autoTimer=setTimeout(autoTick,3600);
+}
+function autoTick(){
+  viewer.autoTimer=null;
+  if(!viewer.autoOn) return;
+  if(isViewerVisible() && !document.hidden && photos.length>1){
+    viewerGo(viewer.i+1,true);
+  }
+  scheduleAutoTick();
+}
+function stopAuto(){
+  if(viewer.autoOn){
+    viewer.autoOn=false; setPlayBtn();
+    if(viewer.autoTimer){ clearTimeout(viewer.autoTimer); viewer.autoTimer=null; }
+  }
+}
+function isViewerVisible(){
+  var ws=document.getElementById('works'); if(!ws) return false;
+  var r=ws.getBoundingClientRect();
+  return r.bottom>0 && r.top<innerHeight;
 }
 function bindViewer(){
   var fig=$('#viewerFigure');
-  if(fig && !fig.dataset.v){ fig.dataset.v='1'; fig.addEventListener('click',function(){ if(photos.length) openLightbox(viewer.i); }); }
+  if(fig && !fig.dataset.v){
+    fig.dataset.v='1';
+    fig.addEventListener('click',function(){ if(photos.length) openLightbox(viewer.i); });
+    fig.addEventListener('wheel',onViewerWheel,{passive:false});
+  }
+  var strip=$('#filmstrip');
+  if(strip && !strip.dataset.w){ strip.dataset.w='1'; strip.addEventListener('wheel',onViewerWheel,{passive:false}); }
   var track=$('#filmTrack'); if(!track || track.dataset.v) return;
   track.dataset.v='1';
   var drag=null;
   track.addEventListener('pointerdown',function(e){
-    if(e.button!==undefined && e.button!==0 && e.pointerType==='mouse') return;
+    if(e.pointerType==='mouse' && e.button!==0) return;
+    stopAuto();
     drag={x:e.clientX,left:track.scrollLeft,moved:false};
     try{ track.setPointerCapture(e.pointerId); }catch(err){}
   });
@@ -1041,6 +1132,49 @@ function bindViewer(){
   track.addEventListener('pointerup',endDrag);
   track.addEventListener('pointercancel',endDrag);
   track.addEventListener('scroll',scheduleFromScroll,{passive:true});
+  /* 滑杆联动 */
+  var play=$('#filmPlay');
+  if(play && !play.dataset.w){ play.dataset.w='1'; play.addEventListener('click',function(){
+    if(photos.length<2) return;
+    viewer.autoOn=!viewer.autoOn;
+    setPlayBtn();
+    if(viewer.autoOn) scheduleAutoTick();
+  }); }
+  var rg=$('#filmRange');
+  if(rg && !rg.dataset.w){
+    rg.dataset.w='1';
+    rg.addEventListener('pointerdown',function(){ stopAuto(); });
+    rg.addEventListener('input',function(){
+      stopAuto();
+      if(viewer.sliderTimer) clearTimeout(viewer.sliderTimer);
+      var v=parseInt(rg.value,10)||0;
+      viewer.sliderTimer=setTimeout(function(){ viewer.sliderTimer=null; viewerGo(v,false); },80);
+    });
+    rg.addEventListener('change',function(){
+      if(viewer.sliderTimer){ clearTimeout(viewer.sliderTimer); viewer.sliderTimer=null; }
+      var v=parseInt(rg.value,10)||0;
+      viewerGo(v,true);
+    });
+  }
+  var down=$('#viewerDown');
+  if(down && !down.dataset.w){
+    down.dataset.w='1';
+    down.addEventListener('click',function(){
+      stopAuto();
+      var rest=Math.max(120, document.documentElement.scrollHeight-(window.scrollY+innerHeight));
+      window.scrollBy({top:Math.min(innerHeight*0.92,rest),behavior:'smooth'});
+    });
+  }
+}
+/* 桌面滚轮：在主图/胶片上滚动即前后选片（带节流，避免连跳） */
+function onViewerWheel(e){
+  if(!photos.length || photos.length<1) return;
+  e.preventDefault();
+  var now=Date.now();
+  if(now-viewer.lastWheel<180) return;
+  viewer.lastWheel=now;
+  stopAuto();
+  viewerGo(viewer.i+(e.deltaY>0?1:-1),true);
 }
 /* 停滞后按视觉中心帧更新大图（拖动即停即选） */
 function scheduleFromScroll(){
