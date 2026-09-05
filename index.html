@@ -520,20 +520,14 @@ body.mode-white #railCount b{color:#111}
   #artBox.is-single .pcell{height:min(60vh,680px)}
 }
 .offer-card .note{white-space:pre-wrap}
-/* ===== 首页与作品合一：衔接与兼容 ===== */
-.home-gallery{position:relative;z-index:4;background:#0b0b0b;border-top:1px solid rgba(255,255,255,.16);margin-top:-4px}
-.home-gallery #tabsWrap{padding:10px clamp(10px,3vw,60px) 2px;max-width:var(--width);margin:0 auto;box-sizing:border-box}
-.home-gallery #tabsWrap.hide{display:none}
-.home-gallery .g-tab.is-on{background:#fff;color:#000;border-color:#fff}
-.home-gallery .loopband{padding:clamp(26px,4vw,44px) 0 clamp(30px,5vw,48px);border-top:1px solid rgba(255,255,255,.1)}
-.home-gallery .band-cap{color:rgba(255,255,255,.55);letter-spacing:.24em}
-.hero-inner{padding-bottom:clamp(18px,3vw,34px)}
-/* 无缝滚动衔接：hero 不锁定满屏，让首屏=大图+作品带整体连续 */
-.hero{min-height:auto}
-@media(max-width:920px){
-  .hero-inner{padding-bottom:26px}
-  .home-gallery .loopband{padding:24px 0 30px}
-}
+/* ===== 循环带紧接首页：深色条带样式（最小改动） ===== */
+.gallery-band{position:relative;z-index:2;background:#0b0b0b;border-top:1px solid rgba(255,255,255,.16);scroll-margin-top:72px}
+.gallery-band #tabsWrap{padding:12px clamp(10px,3vw,60px) 0;max-width:var(--width);margin:0 auto;box-sizing:border-box}
+.gallery-band #tabsWrap.hide{display:none}
+.gallery-band .g-tab.is-on{background:#fff;color:#000;border-color:#fff}
+.gallery-band .loopband{padding:clamp(24px,4vw,42px) 0 clamp(28px,5vw,46px)}
+.gallery-band .band-cap{color:rgba(255,255,255,.55);letter-spacing:.24em}
+.gallery-band .empty{margin:40px auto;max-width:var(--width)}
 </style>
 </head>
 <body>
@@ -560,16 +554,18 @@ body.mode-white #railCount b{color:#111}
       <span class="brand-txt"><b id="brandName">小林花花</b><small>PHOTO · PORTFOLIO</small></span>
     </a>
     <ul class="nav-links">
-      <li><a class="active" href="#home" data-spy="home">首页 · 作品</a></li>
+      <li><a class="active" href="#home" data-spy="home">首页</a></li>
+      <li><a href="#gallery">作品</a></li>
       <li><a href="#pricing" data-spy="pricing" id="navPricing">报价</a></li>
       <li><a href="#contact" data-spy="contact">联系</a></li>
     </ul>
-    <a class="nav-cta" href="#gallery">浏览作品 ↓</a>
+    <a class="nav-cta" href="#gallery">看作品 ↓</a>
     <button id="burger" aria-label="打开导航" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
 </header>
 <nav id="drawer" aria-label="导航抽屉">
-  <a class="active" href="#home">首页 · 作品</a>
+  <a class="active" href="#home">首页</a>
+  <a href="#gallery">作品</a>
   <a href="#pricing" id="navPricingDrawer">报价</a>
   <a href="#contact">联系</a>
   <small>XIAOLINHUAHUA · PHOTOGRAPHY</small>
@@ -628,22 +624,25 @@ body.mode-white #railCount b{color:#111}
       </figure>
     </div>
 
-    <!-- ===== 作品浏览（并入首页首屏，紧接组合大图） ===== -->
-    <div class="home-gallery" id="gallery">
-      <div class="wrap" id="tabsWrap"><div id="groupTabs"></div></div>
-      <div class="loopband">
-        <div class="band-cap"><span>作品循环浏览 · 点击查看大图</span><span class="num" id="capCount">12 WORKS</span></div>
-        <div class="marquee" id="marqueeWrap">
-          <div class="marquee-track" id="marqueeTrack"></div>
-        </div>
-      </div>
-      <div class="wrap">
-        <div class="empty" id="emptyMsg" style="display:none">
-          还没有作品 —— 打开 <a href="editor.html">后台管理</a> 上传图片，新作品会自动出现在这里与上方组合图中。
-        </div>
+    <div class="scene-tag num" id="sceneTag">SCENE 01 / PORTFOLIO</div>
+    <div class="scroll-cue" aria-hidden="true"><span class="line"></span><span>滚动浏览</span></div>
+  </section>
+
+  <!-- ===== 作品循环带（紧接首页下方） ===== -->
+  <div class="gallery-band" id="gallery">
+    <div class="wrap" id="tabsWrap"><div id="groupTabs"></div></div>
+    <div class="loopband">
+      <div class="band-cap"><span>作品循环浏览 · 点击查看大图</span><span class="num" id="capCount">12 WORKS</span></div>
+      <div class="marquee" id="marqueeWrap">
+        <div class="marquee-track" id="marqueeTrack"></div>
       </div>
     </div>
-  </section>
+    <div class="wrap">
+      <div class="empty" id="emptyMsg" style="display:none">
+        还没有作品 —— 打开 <a href="editor.html">后台管理</a> 上传图片，新作品会自动出现在这里与首页轮播中。
+      </div>
+    </div>
+  </div>
 
   <!-- ===== v2 约拍报价区（后台 offers 为空时整块隐藏） ===== -->
   <section class="pricing" id="pricing">
@@ -1038,7 +1037,7 @@ function refreshUnit(){
     })(start+k);
   }
   var a=start+1, b=start+len;
-  var st=$('#sceneTag'); if(st) st.textContent='SCENE '+pad2(a)+(len>1?'–'+pad2(b):'')+' / PORTFOLIO';
+  $('#sceneTag').textContent='SCENE '+pad2(a)+(len>1?'–'+pad2(b):'')+' / PORTFOLIO';
   $('#railCount').innerHTML='<b>'+pad2(a)+(len>1?'–'+pad2(b):'')+'</b>/'+pad2(photos.length);
 }
 /* —— 方向探测：用轻量图快速判横竖，完成后自动把相邻竖图升级为并排双图 —— */
@@ -1087,7 +1086,7 @@ function stageStop(){
 function buildStage(){
   stage.dirs=[]; stage.starts=[]; stage.start=0; stage.renderedLen=0;
   if(!photos.length){
-    var st=$('#sceneTag'); if(st) st.textContent='SCENE 00 / EMPTY';
+    $('#sceneTag').textContent='SCENE 00 / EMPTY';
     $('#artNav').style.display='none';
     $('#heroArtBox').style.display='none';
     return;
