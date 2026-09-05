@@ -527,7 +527,28 @@ body.mode-white #railCount b{color:#111}
 .gallery-band .g-tab.is-on{background:#fff;color:#000;border-color:#fff}
 .gallery-band .loopband{padding:clamp(24px,4vw,42px) 0 clamp(28px,5vw,46px)}
 .gallery-band .band-cap{color:rgba(255,255,255,.55);letter-spacing:.24em}
-.gallery-band .empty{margin:40px auto;max-width:var(--width)}
+/* ===== 首页作品连续页：纵向衔接 + 原生拖动循环带 ===== */
+.hero{flex-direction:column;align-items:stretch;min-height:84svh}
+.hero-inner{width:100%;flex:none;padding-top:72px !important;padding-bottom:18px !important}
+.gallery-band{width:100%;flex:none;position:relative;z-index:4;margin:0;background:#0b0b0b;border-top:1px solid rgba(255,255,255,.16);scroll-margin-top:72px}
+.gallery-band #tabsWrap{padding:6px clamp(10px,3vw,60px) 0;max-width:var(--width);margin:0 auto;box-sizing:border-box}
+.gallery-band #tabsWrap.hide{display:none}
+.gallery-band .g-tab.is-on{background:#fff;color:#000;border-color:#fff}
+.gallery-band .loopband{padding:clamp(12px,2vw,24px) 0 clamp(18px,3vw,30px);border-top:1px solid rgba(255,255,255,.1)}
+.gallery-band .band-cap{padding-bottom:10px;color:rgba(255,255,255,.55);letter-spacing:.22em}
+.gallery-band .empty{margin:28px auto;max-width:var(--width)}
+.hero .scene-tag,.hero .scroll-cue{display:none}
+.gallery-band .marquee{overflow-x:auto;overflow-y:hidden;cursor:grab;touch-action:pan-y;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:none;-webkit-mask-image:none}
+.gallery-band .marquee::-webkit-scrollbar{display:none}
+.gallery-band .marquee:active{cursor:grabbing}
+.gallery-band .marquee-track{animation:none !important;width:max-content;padding:4px clamp(10px,3vw,44px) 8px}
+.gallery-band .mcell{scroll-snap-align:center}
+@media(max-width:920px){
+  .hero{min-height:auto}
+  .hero-inner{padding-top:76px !important;padding-bottom:12px !important}
+  .gallery-band .loopband{padding:12px 0 22px}
+  .gallery-band .mcell .ph img{height:clamp(150px,28vh,230px);max-width:76vw}
+}
 </style>
 </head>
 <body>
@@ -632,7 +653,7 @@ body.mode-white #railCount b{color:#111}
   <div class="gallery-band" id="gallery">
     <div class="wrap" id="tabsWrap"><div id="groupTabs"></div></div>
     <div class="loopband">
-      <div class="band-cap"><span>作品循环浏览 · 点击查看大图</span><span class="num" id="capCount">12 WORKS</span></div>
+      <div class="band-cap"><span>拖动浏览 · 点击查看大图</span><span class="num" id="capCount">12 WORKS</span></div>
       <div class="marquee" id="marqueeWrap">
         <div class="marquee-track" id="marqueeTrack"></div>
       </div>
@@ -929,8 +950,8 @@ function renderMarquee(){
   }
   if(wrapEl) wrapEl.closest('.loopband').style.display='';
   if(emptyEl) emptyEl.style.display='none';
-  var est=Math.max(2,Math.ceil((innerWidth*2.2)/420));
-  var reps=Math.ceil(est/photos.length)*2;
+  // 一次只渲染一份作品：原生横向拖动浏览，避免重复帧干扰选片
+  var reps=1;
   var i=0;
   while(i<photos.length*reps){
     track.appendChild(nodeFrom(photos[i%photos.length],i));
