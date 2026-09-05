@@ -128,8 +128,8 @@ textarea{resize:vertical;min-height:74px}
 /* v2.6 填写体验：更大的输入区与字号 */
 .ph-fields input[type=text],.ph-fields input[type=password],.ph-fields textarea,.ph-fields select{font-size:15px;line-height:1.7}
 .ph-fields textarea{min-height:76px;resize:vertical}
-textarea#notice{min-height:64px;font-size:15px}
-textarea#pricingNote{min-height:64px;font-size:15px}
+textarea#notice{min-height:112px;font-size:15px;line-height:1.8}
+textarea#pricingNote{min-height:112px;font-size:15px;line-height:1.8}
 .o-title,.o-price{font-size:15px !important}
 @media(max-width:760px){.ph-fields .f-2{grid-template-columns:1fr}}
 </style>
@@ -176,7 +176,7 @@ textarea#pricingNote{min-height:64px;font-size:15px}
         <div><label>抖音号（可编辑）</label><input type="text" id="douyin" placeholder="抖音搜索的账号，如 yansheng7000"></div>
       </div>
       <label>顶部公告（前台顶栏展示 · 留空则不显示 · 可换行）</label>
-      <textarea id="notice" rows="2" placeholder="如：7 月排单中，急单请提前一周预约"></textarea>
+      <textarea id="notice" rows="4" placeholder="如：7 月排单中，急单请提前一周预约"></textarea>
       <div class="cfg-row">
         <div>
           <label>默认背景模式（访客仍可右下角切换）</label>
@@ -188,7 +188,8 @@ textarea#pricingNote{min-height:64px;font-size:15px}
         </div>
         <div>
           <label>报价区补充说明（可选 · 可多行）</label>
-          <textarea id="pricingNote" rows="2" placeholder="如：定金 30% / 出片 7 天内"></textarea>
+          <textarea id="pricingNote" rows="4" placeholder="如：定金 30% / 出片 7 天内"></textarea>
+        </div>
       </div>
       <label class="switch"><input type="checkbox" id="fxEnabled" checked> 开启首页萤火虫氛围光效（暖黄 · 后台关闭后前台不渲染）</label>
     </div>
@@ -853,7 +854,7 @@ function offerRowHTML(o,i){
         '<div><label>价格（可写“活动价 199 原价299”）</label><input type="text" class="o-price" value="'+hx(o.price||'')+'" placeholder="如：299 原价399"></div>'+
       '</div>'+
       '<label>说明 / 活动（多行展示，可含换行）</label>'+
-      '<textarea class="o-note" rows="3" placeholder="如：含后期精修 · 7 月活动立减 100">'+hx(o.note||'')+'</textarea>'+
+      '<textarea class="o-note" rows="6" placeholder="如：含后期精修 · 7 月活动立减 100">'+hx(o.note||'')+'</textarea>'+
     '</div></div>'+
   '</div>';
 }
