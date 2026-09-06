@@ -996,9 +996,8 @@ function nodeFrom(p,i){
   fig.appendChild(cap);
   function goLight(){
     if(Date.now()<mqTapLockUntil) return;
-    mqGoto(i,true);            // 单击作品 = 切换到该张主图（想放大原图请点大图）
+    mqGoto(i,true);            // 选择作品 = 切换到该张主图（想放大原图请点大图）
   }
-  fig.addEventListener('click',goLight);
   fig.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goLight(); } });
   return fig;
 }
@@ -1047,20 +1046,31 @@ function mqGoto(i,align){
 function mqBind(){
   var wrap=$('#marqueeWrap'); if(!wrap||wrap.dataset.mq) return;
   wrap.dataset.mq='1';
-  /* 滚轮：单轴主导方向，每次滚动事件按方向切一帧（节流防连跳） */
+  /* 滚轮：单轴主导、阈值更低更灵敏，最多约 11 张/秒 */
   var band=wrap.closest('.loopband')||wrap;
-  var mqLastStep=0;
+  var mqAcc=0, mqLastStep=0;
   band.addEventListener('wheel',function(e){
     e.preventDefault();
     pauseAuto(4500);
     var dy=e.deltaY||0, dx=e.deltaX||0;
     var u=Math.abs(dy)>=Math.abs(dx)?dy:dx;      // 取主导轴，避免双轴抵消
-    if(Math.abs(u)<6) return;
+    mqAcc+=u;
+    if(Math.abs(mqAcc)<14) return;               // 累计足够位移才切（更灵敏）
     var now=Date.now();
-    if(now-mqLastStep<150) return;
+    if(now-mqLastStep<90) return;                // 节流上限，避免过速连跳
     mqLastStep=now;
-    mqStep(u<0?-1:1);                            // 向上滚=上一张，向下滚=下一张
+    var dir=mqAcc<0?-1:1;
+    mqAcc=0;
+    mqStep(dir);                                 // 向上=上一张，向下=下一张
   },{passive:false});
+  /* 单击作品帧 = 切换到该张（容器级监听，规避指针捕获导致的丢点击） */
+  wrap.addEventListener('click',function(e){
+    if(Date.now()<mqTapLockUntil) return;
+    var fr=e.target&&e.target.closest?e.target.closest('.mcell'):null;
+    if(!fr) return;
+    var fi=parseInt(fr.getAttribute('data-fi'),10);
+    if(!isNaN(fi) && fi>=0 && fi<photos.length) mqGoto(fi,true);
+  });
   wrap.addEventListener('pointerdown',function(){ pauseAuto(4500); },{passive:true});
   /* 统一指针拖拽（鼠标 / 触屏都能拖着滚） */
   var dg=null;
