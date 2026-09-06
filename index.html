@@ -549,6 +549,18 @@ body.mode-white #railCount b{color:#111}
   .gallery-band .loopband{padding:12px 0 22px}
   .gallery-band .mcell .ph img{height:clamp(150px,28vh,230px);max-width:76vw}
 }
+/* ===== 首屏与作品带合并为一页：间距收至极小 ===== */
+.hero{min-height:78svh}
+.hero-inner{padding-bottom:0 !important}
+.gallery-band{border-top:none}
+.gallery-band #tabsWrap{padding-top:2px}
+.gallery-band .loopband{padding-top:4px;border-top:none}
+.gallery-band .band-cap{padding-bottom:6px}
+@media(max-width:920px){
+  .hero-inner{padding-bottom:0 !important}
+  .gallery-band #tabsWrap{padding-top:0}
+  .gallery-band .loopband{padding-top:2px}
+}
 </style>
 </head>
 <body>
