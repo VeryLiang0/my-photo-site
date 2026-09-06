@@ -612,6 +612,17 @@ body.mode-white #railCount b{color:#111}
 @media(max-width:479px){
   #artBox.is-single .pcell{height:min(170vw,80vh)}
 }
+/* ===== 手机端竖图完整显示（不被上下裁切） ===== */
+@media(max-width:920px){
+  .hero,.hero-inner,.hero-art,.art-box,#artPhotos,.pcell{overflow:visible !important}
+  #artBox{height:auto;max-height:none;min-height:0}
+  #artBox .pcell{height:auto !important;max-height:none}
+  #artBox .pcell img{width:auto !important;height:auto !important;max-width:100% !important;max-height:min(80vh,860px) !important}
+  #artBox.is-single .pcell{width:100%}
+}
+@media(max-width:479px){
+  #artBox .pcell img{max-height:min(76vh,840px) !important}
+}
 </style>
 </head>
 <body>
