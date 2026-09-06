@@ -589,6 +589,10 @@ body.mode-white #railCount b{color:#111}
 #mqRange::-moz-range-track{height:3px;background:rgba(255,255,255,.28)}
 #mqRange::-moz-range-thumb{width:15px;height:15px;border-radius:5px;background:#fff;border:none}
 .mq-pos{font-family:var(--num);font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.9);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);padding:4px 11px;border-radius:8px;flex:none}
+/* ===== 作品带统一拖拽 ===== */
+.gallery-band .marquee:active{cursor:grabbing}
+.gallery-band .marquee img{-webkit-user-drag:none;user-select:none}
+</style>
 @media(max-width:920px){
   .mq-bar{gap:10px;padding:2px 8px 8px}
   .mq-label{display:none}
@@ -991,6 +995,7 @@ function nodeFrom(p,i){
   cap.innerHTML='<i>'+((i%photos.length)+1)+' / '+photos.length+'</i>'+(p.title?'<em>'+esc(p.title)+'</em>':'');
   fig.appendChild(cap);
   function goLight(){
+    if(Date.now()<mqTapLockUntil) return;
     var g=mqStartOf(i);
     if(g!==stage.start){ stage.start=g; refreshUnit(); }
     openLightbox(i);
@@ -1026,7 +1031,7 @@ function renderMarquee(){
 }
 
 /* ===== 自动同步轮播：大图 ⇄ 滚动条（无按键，可拖动/滚轮） ===== */
-var mqSeekT=null, mqSuppress=0, autoResumeT=null, lbAutoWas=false, mqSnapT=null, mqBarT=null, mqAcc=0;
+var mqSeekT=null, mqSuppress=0, autoResumeT=null, lbAutoWas=false, mqSnapT=null, mqBarT=null, mqAcc=0, mqTapLockUntil=0;
 function mqPos(i){
   var rg=$('#mqRange'); if(rg) rg.value=i;
   var p=$('#mqPos'); if(p) p.textContent=(i+1)+' / '+photos.length;
@@ -1055,6 +1060,22 @@ function mqBind(){
     if(steps){ mqAcc-=steps*th; mqStep(steps); }
   },{passive:false});
   wrap.addEventListener('pointerdown',function(){ pauseAuto(4500); },{passive:true});
+  /* 统一指针拖拽（鼠标 / 触屏都能拖着滚） */
+  var dg=null;
+  wrap.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    dg={id:e.pointerId,x:e.clientX,left:wrap.scrollLeft,moved:false};
+    try{ wrap.setPointerCapture(e.pointerId); }catch(err){}
+  },{passive:true});
+  wrap.addEventListener('pointermove',function(e){
+    if(!dg||dg.id!==e.pointerId) return;
+    var dx=e.clientX-dg.x;
+    wrap.scrollLeft=dg.left-dx;
+    if(Math.abs(dx)>4) dg.moved=true;
+  },{passive:true});
+  function endDg(){ if(!dg) return; var m=dg.moved; dg=null; if(m){ mqTapLockUntil=Date.now()+500; mqSchedule(); } }
+  wrap.addEventListener('pointerup',endDg,{passive:true});
+  wrap.addEventListener('pointercancel',endDg,{passive:true});
   wrap.addEventListener('scroll',function(){ if(Date.now()<mqSuppress) return; mqSchedule(); },{passive:true});
   /* 进度滑杆：第二条控制手段 */
   var rg=$('#mqRange');
