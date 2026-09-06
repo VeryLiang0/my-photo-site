@@ -543,7 +543,11 @@ body.mode-white #railCount b{color:#111}
 .gallery-band .marquee:active{cursor:grabbing}
 .gallery-band .marquee-track{animation:none !important;width:max-content;padding:4px clamp(10px,3vw,44px) 8px}
 .gallery-band .mcell{scroll-snap-align:center}
-@media(max-width:920px){
+/* ===== 自动同步轮播（无按键）+ 滚动条横滚/拖动 ===== */
+#artNav{display:none !important}
+.gallery-band .marquee{overscroll-behavior-x:contain;scrollbar-width:none}
+.gallery-band .mcell.is-on .ph{box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,255,255,.35);border-radius:4px}
+.gallery-band .mcell.is-on figcaption i{color:#fff}@media(max-width:920px){
   .hero{min-height:auto}
   .hero-inner{padding-top:76px !important;padding-bottom:12px !important}
   .gallery-band .loopband{padding:12px 0 22px}
@@ -571,6 +575,11 @@ body.mode-white #railCount b{color:#111}
   .hero-inner{padding-top:60px !important}
   .gallery-band .loopband{padding-top:0}
 }
+/* ===== 自动同步轮播（无按键）+ 滚动条横滚/拖动 ===== */
+#artNav{display:none !important}
+.gallery-band .marquee{overscroll-behavior-x:contain;scrollbar-width:none}
+.gallery-band .mcell.is-on .ph{box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,255,255,.35);border-radius:4px}
+.gallery-band .mcell.is-on figcaption i{color:#fff}
 </style>
 </head>
 <body>
@@ -948,6 +957,7 @@ function nodeFrom(p,i){
   var fig=document.createElement('figure');
   fig.className='mcell';
   fig.tabIndex=0; fig.setAttribute('role','button');
+  fig.setAttribute('data-fi',i);
   fig.setAttribute('aria-label','查看大图 '+(i+1));
   var ph=document.createElement('div'); ph.className='ph';
   var img=document.createElement('img');
@@ -958,8 +968,13 @@ function nodeFrom(p,i){
   var cap=document.createElement('figcaption');
   cap.innerHTML='<i>'+((i%photos.length)+1)+' / '+photos.length+'</i>'+(p.title?'<em>'+esc(p.title)+'</em>':'');
   fig.appendChild(cap);
-  fig.addEventListener('click',function(){ openLightbox(i); });
-  fig.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openLightbox(i); } });
+  function goLight(){
+    var g=mqStartOf(i);
+    if(g!==stage.start){ stage.start=g; refreshUnit(); }
+    openLightbox(i);
+  }
+  fig.addEventListener('click',goLight);
+  fig.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goLight(); } });
   return fig;
 }
 function renderMarquee(){
@@ -981,8 +996,81 @@ function renderMarquee(){
   }
   var dur=Math.max(30,photos.length*6);
   track.style.setProperty('--dur',dur+'s');
+  mqBind();
+  mqSyncFromStage();
+  ensureAuto();
 }
 
+/* ===== 自动同步轮播：大图 ⇄ 滚动条（无按键，可拖动/滚轮） ===== */
+var mqSeekT=null, mqSuppress=0, autoResumeT=null, lbAutoWas=false;
+function mqBind(){
+  var wrap=$('#marqueeWrap'); if(!wrap||wrap.dataset.mq) return;
+  wrap.dataset.mq='1';
+  wrap.addEventListener('wheel',function(e){                 // 电脑滚轮 → 横向浏览
+    e.preventDefault();
+    pauseAuto(4200);
+    wrap.scrollLeft+=((e.deltaY||0)+(e.deltaX||0));
+    mqSchedule();
+  },{passive:false});
+  wrap.addEventListener('pointerdown',function(){ pauseAuto(4200); },{passive:true});
+  wrap.addEventListener('scroll',function(){ if(Date.now()<mqSuppress) return; mqSchedule(); },{passive:true});
+}
+function mqSchedule(){
+  if(mqSeekT) return;
+  mqSeekT=setTimeout(function(){ mqSeekT=null; mqCenterPick(); },160);
+}
+function mqCenterPick(){
+  var wrap=$('#marqueeWrap'); if(!wrap||!wrap.isConnected) return;
+  var cells=wrap.querySelectorAll('.mcell'); if(!cells.length) return;
+  var wr=wrap.getBoundingClientRect(), cx=wr.left+wr.width/2;
+  var best=0,bd=1e18;
+  for(var k=0;k<cells.length;k++){
+    var c=cells[k].getBoundingClientRect(), d=Math.abs((c.left+c.width/2)-cx);
+    if(d<bd){ bd=d; best=k; }
+  }
+  var fi=parseInt(cells[best].getAttribute('data-fi'),10);
+  if(isNaN(fi)) return;
+  var g=mqStartOf(fi);
+  if(g!==stage.start){ stage.start=g; refreshUnit(); }
+  mqMark(fi);
+}
+function mqStartOf(i){
+  var starts=[],s=0;
+  while(s<photos.length){ starts.push(s); s+=unitLenAt(s); }
+  var b=starts.length?starts[0]:0;
+  for(var k=0;k<starts.length;k++){ if(starts[k]<=i) b=starts[k]; else break; }
+  return b;
+}
+function mqMark(i){
+  var prev=document.querySelector('#marqueeWrap .mcell.is-on');
+  if(prev) prev.classList.remove('is-on');
+  var fr=document.querySelector('#marqueeWrap .mcell[data-fi="'+i+'"]');
+  if(fr) fr.classList.add('is-on');
+}
+function mqCenter(i){
+  var wrap=$('#marqueeWrap'); if(!wrap) return;
+  var fr=document.querySelector('#marqueeWrap .mcell[data-fi="'+i+'"]');
+  if(!fr) return;
+  mqSuppress=Date.now()+800;
+  var wr=wrap.getBoundingClientRect(), frr=fr.getBoundingClientRect();
+  var target=wrap.scrollLeft+(frr.left-wr.left)-(wr.width-frr.width)/2;
+  try{ wrap.scrollTo({left:Math.max(0,target),behavior:'smooth'}); }
+  catch(e){ wrap.scrollLeft=Math.max(0,target); }
+}
+function mqSyncFromStage(){
+  var wrap=$('#marqueeWrap'); if(!wrap||!wrap.isConnected) return;
+  var i=stage.start;
+  mqMark(i);
+  mqCenter(i);
+}
+function ensureAuto(){
+  if(!reduced && photos.length>1 && !stage.timer) stageStart();
+}
+function pauseAuto(ms){
+  if(stage.timer){ stageStop(); setStagePlaying(false); }
+  clearTimeout(autoResumeT);
+  if(photos.length>1 && !reduced) autoResumeT=setTimeout(ensureAuto, ms||4200);
+}
 /* ===== 首屏舞台 v2.3：组合画布 —— 竖图两两并排 · 横图/独图单张大屏 ===== */
 var stage={start:0,starts:[],timer:null,playing:false,suppressClick:false,dirs:[],probeBusy:false,renderedLen:0};
 var ICON_PAUSE='<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
@@ -1082,6 +1170,7 @@ function refreshUnit(){
   var a=start+1, b=start+len;
   $('#sceneTag').textContent='SCENE '+pad2(a)+(len>1?'–'+pad2(b):'')+' / PORTFOLIO';
   $('#railCount').innerHTML='<b>'+pad2(a)+(len>1?'–'+pad2(b):'')+'</b>/'+pad2(photos.length);
+  mqSyncFromStage();
 }
 /* —— 方向探测：用轻量图快速判横竖，完成后自动把相邻竖图升级为并排双图 —— */
 function probeAll(){
@@ -1230,6 +1319,8 @@ function openLightbox(i){
   if(!photos.length) return;
   state.idx=(i+photos.length)%photos.length;
   state.open=true;
+  lbAutoWas=!!stage.timer;
+  if(lbAutoWas){ stageStop(); setStagePlaying(false); }
   $('#lightbox').classList.add('open');
   document.body.style.overflow='hidden';
   showImage();
@@ -1239,6 +1330,7 @@ function closeLightbox(){
   state.open=false;
   $('#lightbox').classList.remove('open');
   document.body.style.overflow='';
+  if(lbAutoWas){ lbAutoWas=false; ensureAuto(); }
   var im=$('#lbImg');
   im.classList.remove('loaded','err','is-zoomed');
 }
