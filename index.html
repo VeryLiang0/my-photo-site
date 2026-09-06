@@ -623,6 +623,14 @@ body.mode-white #railCount b{color:#111}
 @media(max-width:479px){
   #artBox .pcell img{max-height:min(76vh,840px) !important}
 }
+/* ===== 手机端竖图：整张完整且不把首屏/页面撑高 ===== */
+@media(max-width:920px){
+  .hero{min-height:auto}
+  #artBox .pcell img{max-height:min(62vh,700px) !important}
+}
+@media(max-width:479px){
+  #artBox .pcell img{max-height:min(58vh,660px) !important}
+}
 </style>
 </head>
 <body>
@@ -1422,6 +1430,19 @@ function bindStageControls(){
     if(e.key==='ArrowRight') stageStep(1);
     else if(e.key==='ArrowLeft') stageStep(-1);
   });
+  /* 首屏大图上：滚轮 上下 即可切换上一组/下一组（滚轮不再用于滚动页面） */
+  box.addEventListener('wheel',function(e){
+    if(photos.length<1) return;
+    e.preventDefault();
+    pauseAuto(4600);
+    var dy=e.deltaY||0, dx=e.deltaX||0;
+    var u=Math.abs(dy)>=Math.abs(dx)?dy:dx;
+    if(Math.abs(u)<8) return;
+    var now=Date.now();
+    if(now-(box.__wheelAt||0)<120) return;
+    box.__wheelAt=now;
+    if(u<0) stageStep(-1); else stageStep(1);
+  },{passive:false});
 }
 
 /* ===== 灯箱 ===== */
