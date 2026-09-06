@@ -541,7 +541,7 @@ body.mode-white #railCount b{color:#111}
 .gallery-band .marquee{overflow-x:auto;overflow-y:hidden;cursor:grab;touch-action:pan-y;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:none;-webkit-mask-image:none}
 .gallery-band .marquee::-webkit-scrollbar{display:none}
 .gallery-band .marquee:active{cursor:grabbing}
-.gallery-band .marquee-track{animation:none !important;width:max-content;padding:4px max(12px,42vw) 8px}
+.gallery-band .marquee-track{animation:none !important;width:max-content;padding:4px clamp(8px,2vw,26px) 8px}
 .gallery-band .mcell{scroll-snap-align:center}
 /* ===== 自动同步轮播（无按键）+ 滚动条横滚/拖动 ===== */
 #artNav{display:none !important}
@@ -1081,6 +1081,17 @@ function mqSchedule(){
 function mqCenterIdx(){
   var wrap=$('#marqueeWrap'); if(!wrap||!wrap.isConnected) return 0;
   var cells=wrap.querySelectorAll('.mcell'); if(!cells.length) return 0;
+  /* 拖到最左/最右时直接命中首/尾帧，避免端点“空缺”与漏选 */
+  var max=wrap.scrollWidth-wrap.clientWidth;
+  if(wrap.scrollLeft<=2){
+    var f0=parseInt((cells[0]&&cells[0].getAttribute('data-fi'))||'',10);
+    return isNaN(f0)?0:f0;
+  }
+  if(max>0 && wrap.scrollLeft>=max-2){
+    var last=cells[cells.length-1];
+    var fl=parseInt((last&&last.getAttribute('data-fi'))||'',10);
+    return isNaN(fl)?(photos.length-1):fl;
+  }
   var wr=wrap.getBoundingClientRect(), cx=wr.left+wr.width/2;
   var best=0,bd=1e18;
   for(var k=0;k<cells.length;k++){
