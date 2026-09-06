@@ -600,6 +600,18 @@ body.mode-white #railCount b{color:#111}
   #mqRange::-moz-range-thumb{width:20px;height:20px;border-radius:7px}
   .mq-pos{font-size:10px;padding:5px 10px}
 }
+/* ===== 手机端首屏竖图保证完整（不被上下裁剪） ===== */
+@media(max-width:920px){
+  .hero-art,#heroArtBox,#artBox,.pcell{overflow:visible !important}
+  #artBox.is-single{height:auto}
+  #artBox.is-single .pcell{height:min(158vw,78vh);width:100%}
+  #artBox .pcell img{object-fit:contain !important}
+  #artBox.is-single .pcell img{max-height:none !important;height:100% !important;width:100% !important}
+  #artBox:not(.is-single) .pcell{height:min(58vh,640px)}
+}
+@media(max-width:479px){
+  #artBox.is-single .pcell{height:min(170vw,80vh)}
+}
 </style>
 </head>
 <body>
