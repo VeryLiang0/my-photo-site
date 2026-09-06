@@ -580,6 +580,23 @@ body.mode-white #railCount b{color:#111}
 .gallery-band .marquee{overscroll-behavior-x:contain;scrollbar-width:none}
 .gallery-band .mcell.is-on .ph{box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,255,255,.35);border-radius:4px}
 .gallery-band .mcell.is-on figcaption i{color:#fff}
+/* ===== 进度滑杆（第二条控制条，与大图/缩略带同步） ===== */
+.mq-bar{display:flex;align-items:center;gap:14px;padding:2px clamp(10px,3vw,44px) 8px}
+.mq-label{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.24em;flex:none}
+#mqRange{flex:1;min-width:0;height:26px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;margin:0;padding:0}
+#mqRange::-webkit-slider-runnable-track{height:3px;border-radius:99px;background:rgba(255,255,255,.28)}
+#mqRange::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:5px;background:#fff;margin-top:-6px;border:none;box-shadow:0 0 10px rgba(255,255,255,.55)}
+#mqRange::-moz-range-track{height:3px;background:rgba(255,255,255,.28)}
+#mqRange::-moz-range-thumb{width:15px;height:15px;border-radius:5px;background:#fff;border:none}
+.mq-pos{font-family:var(--num);font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.9);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);padding:4px 11px;border-radius:8px;flex:none}
+@media(max-width:920px){
+  .mq-bar{gap:10px;padding:2px 8px 8px}
+  .mq-label{display:none}
+  #mqRange{height:30px}
+  #mqRange::-webkit-slider-thumb{width:20px;height:20px;border-radius:7px;margin-top:-8.5px}
+  #mqRange::-moz-range-thumb{width:20px;height:20px;border-radius:7px}
+  .mq-pos{font-size:10px;padding:5px 10px}
+}
 </style>
 </head>
 <body>
@@ -684,7 +701,12 @@ body.mode-white #railCount b{color:#111}
   <div class="gallery-band" id="gallery">
     <div class="wrap" id="tabsWrap"><div id="groupTabs"></div></div>
     <div class="loopband">
-      <div class="band-cap"><span>拖动浏览 · 点击查看大图</span><span class="num" id="capCount">12 WORKS</span></div>
+      <div class="band-cap"><span>拖动作品或下方进度条浏览</span><span class="num" id="capCount">12 WORKS</span></div>
+      <div class="mq-bar">
+        <span class="mq-label num">PROGRESS</span>
+        <input type="range" id="mqRange" min="0" max="0" value="0" step="1" aria-label="浏览进度">
+        <span class="num mq-pos" id="mqPos">1 / 0</span>
+      </div>
       <div class="marquee" id="marqueeWrap">
         <div class="marquee-track" id="marqueeTrack"></div>
       </div>
@@ -996,24 +1018,62 @@ function renderMarquee(){
   }
   var dur=Math.max(30,photos.length*6);
   track.style.setProperty('--dur',dur+'s');
+  var rg=$('#mqRange'); if(rg){ rg.min=0; rg.max=photos.length-1; rg.value=stage.start||0; }
+  mqPos(stage.start||0);
   mqBind();
   mqSyncFromStage();
   ensureAuto();
 }
 
 /* ===== 自动同步轮播：大图 ⇄ 滚动条（无按键，可拖动/滚轮） ===== */
-var mqSeekT=null, mqSuppress=0, autoResumeT=null, lbAutoWas=false;
+var mqSeekT=null, mqSuppress=0, autoResumeT=null, lbAutoWas=false, mqSnapT=null, mqBarT=null;
+function mqPos(i){
+  var rg=$('#mqRange'); if(rg) rg.value=i;
+  var p=$('#mqPos'); if(p) p.textContent=(i+1)+' / '+photos.length;
+}
+function mqGoto(i,align){
+  if(!photos.length) return;
+  i=Math.max(0,Math.min(photos.length-1,i|0));
+  pauseAuto(4500);
+  var g=mqStartOf(i);
+  if(g!==stage.start){ stage.start=g; refreshUnit(); }
+  mqMark(i);
+  mqPos(i);
+  if(align) mqCenter(i);
+}
 function mqBind(){
   var wrap=$('#marqueeWrap'); if(!wrap||wrap.dataset.mq) return;
   wrap.dataset.mq='1';
-  wrap.addEventListener('wheel',function(e){                 // 电脑滚轮 → 横向浏览
+  /* 滚轮作用域扩到整个作品带区；临时关闭吸附避免滚不动，灵敏度 2.6x，可滚完全程 */
+  var band=wrap.closest('.loopband')||wrap;
+  band.addEventListener('wheel',function(e){
     e.preventDefault();
-    pauseAuto(4200);
-    wrap.scrollLeft+=((e.deltaY||0)+(e.deltaX||0));
+    pauseAuto(4500);
+    wrap.style.scrollSnapType='none';
+    wrap.scrollLeft+=((e.deltaY||0)+(e.deltaX||0))*2.6;
     mqSchedule();
+    if(mqSnapT) clearTimeout(mqSnapT);
+    mqSnapT=setTimeout(function(){ wrap.style.scrollSnapType='x proximity'; },320);
   },{passive:false});
-  wrap.addEventListener('pointerdown',function(){ pauseAuto(4200); },{passive:true});
+  wrap.addEventListener('pointerdown',function(){ pauseAuto(4500); },{passive:true});
   wrap.addEventListener('scroll',function(){ if(Date.now()<mqSuppress) return; mqSchedule(); },{passive:true});
+  /* 进度滑杆：第二条控制手段 */
+  var rg=$('#mqRange');
+  if(rg&&!rg.dataset.mq){
+    rg.dataset.mq='1';
+    rg.addEventListener('pointerdown',function(){ pauseAuto(5000); });
+    rg.addEventListener('input',function(){
+      var v=parseInt(rg.value,10)||0;
+      mqMark(v);
+      mqPos(v);
+      if(mqBarT) clearTimeout(mqBarT);
+      mqBarT=setTimeout(function(){ mqBarT=null; mqGoto(v,true); },120);
+    });
+    rg.addEventListener('change',function(){
+      if(mqBarT){ clearTimeout(mqBarT); mqBarT=null; }
+      mqGoto(parseInt(rg.value,10)||0,true);
+    });
+  }
 }
 function mqSchedule(){
   if(mqSeekT) return;
@@ -1033,6 +1093,7 @@ function mqCenterPick(){
   var g=mqStartOf(fi);
   if(g!==stage.start){ stage.start=g; refreshUnit(); }
   mqMark(fi);
+  mqPos(fi);
 }
 function mqStartOf(i){
   var starts=[],s=0;
@@ -1062,6 +1123,7 @@ function mqSyncFromStage(){
   var i=stage.start;
   mqMark(i);
   mqCenter(i);
+  mqPos(i);
 }
 function ensureAuto(){
   if(!reduced && photos.length>1 && !stage.timer) stageStart();
