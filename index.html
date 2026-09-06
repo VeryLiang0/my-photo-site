@@ -1063,19 +1063,26 @@ function mqBind(){
     mqAcc=0;
     mqStep(dir);                                 // 向上=上一张，向下=下一张
   },{passive:false});
-  /* 单击作品帧 = 切换到该张（容器级监听，规避指针捕获导致的丢点击） */
-  wrap.addEventListener('click',function(e){
+  /* 单击作品帧 = 切换到该张：优先用 pointerdown 记下的帧（兼容指针捕获），拖动则不触发 */
+  wrap.addEventListener('click',function(){
     if(Date.now()<mqTapLockUntil) return;
-    var fr=e.target&&e.target.closest?e.target.closest('.mcell'):null;
-    if(!fr) return;
-    var fi=parseInt(fr.getAttribute('data-fi'),10);
-    if(!isNaN(fi) && fi>=0 && fi<photos.length) mqGoto(fi,true);
+    var fi=null;
+    if(tapFr!==null){ fi=tapFr; tapFr=null; }
+    else{
+      var ev=arguments[0];
+      var fr=ev&&ev.target&&ev.target.closest?ev.target.closest('.mcell'):null;
+      fi=fr?parseInt(fr.getAttribute('data-fi'),10):null;
+    }
+    if(fi===null||isNaN(fi)) return;
+    if(fi>=0 && fi<photos.length) mqGoto(fi,true);
   });
   wrap.addEventListener('pointerdown',function(){ pauseAuto(4500); },{passive:true});
-  /* 统一指针拖拽（鼠标 / 触屏都能拖着滚） */
-  var dg=null;
+  /* 统一指针拖拽（鼠标 / 触屏都能拖着滚），并记录按下时所在的作品帧 */
+  var dg=null, tapFr=null;
   wrap.addEventListener('pointerdown',function(e){
     if(e.pointerType==='mouse'&&e.button!==0) return;
+    var fr=e.target&&e.target.closest?e.target.closest('.mcell'):null;
+    tapFr=fr?parseInt(fr.getAttribute('data-fi'),10):null;
     dg={id:e.pointerId,x:e.clientX,left:wrap.scrollLeft,moved:false};
     try{ wrap.setPointerCapture(e.pointerId); }catch(err){}
   },{passive:true});
@@ -1083,7 +1090,7 @@ function mqBind(){
     if(!dg||dg.id!==e.pointerId) return;
     var dx=e.clientX-dg.x;
     wrap.scrollLeft=dg.left-dx;
-    if(Math.abs(dx)>4) dg.moved=true;
+    if(Math.abs(dx)>4){ dg.moved=true; tapFr=null; }
   },{passive:true});
   function endDg(){ if(!dg) return; var m=dg.moved; dg=null; if(m){ mqTapLockUntil=Date.now()+500; mqSchedule(); } }
   wrap.addEventListener('pointerup',endDg,{passive:true});
