@@ -705,7 +705,7 @@ body.mode-white #railCount b{color:#111}
   <div class="gallery-band" id="gallery">
     <div class="wrap" id="tabsWrap"><div id="groupTabs"></div></div>
     <div class="loopband">
-      <div class="band-cap"><span>拖动作品或下方进度条浏览</span><span class="num" id="capCount">12 WORKS</span></div>
+      <div class="band-cap"><span>拖动 / 单击切换 · 滚轮浏览</span><span class="num" id="capCount">12 WORKS</span></div>
       <div class="mq-bar">
         <span class="mq-label num">PROGRESS</span>
         <input type="range" id="mqRange" min="0" max="0" value="0" step="1" aria-label="浏览进度">
@@ -996,9 +996,7 @@ function nodeFrom(p,i){
   fig.appendChild(cap);
   function goLight(){
     if(Date.now()<mqTapLockUntil) return;
-    var g=mqStartOf(i);
-    if(g!==stage.start){ stage.start=g; refreshUnit(); }
-    openLightbox(i);
+    mqGoto(i,true);            // 单击作品 = 切换到该张主图（想放大原图请点大图）
   }
   fig.addEventListener('click',goLight);
   fig.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goLight(); } });
@@ -1049,15 +1047,19 @@ function mqGoto(i,align){
 function mqBind(){
   var wrap=$('#marqueeWrap'); if(!wrap||wrap.dataset.mq) return;
   wrap.dataset.mq='1';
-  /* 滚轮 → 帧步进式切换：一格切一张，可稳定滚到首尾，不受“中心判定”限制 */
+  /* 滚轮：单轴主导方向，每次滚动事件按方向切一帧（节流防连跳） */
   var band=wrap.closest('.loopband')||wrap;
-  var mqAcc=0;
+  var mqLastStep=0;
   band.addEventListener('wheel',function(e){
     e.preventDefault();
     pauseAuto(4500);
-    mqAcc+=(e.deltaY||0)+(e.deltaX||0);
-    var th=52, steps=Math.trunc(mqAcc/th);
-    if(steps){ mqAcc-=steps*th; mqStep(steps); }
+    var dy=e.deltaY||0, dx=e.deltaX||0;
+    var u=Math.abs(dy)>=Math.abs(dx)?dy:dx;      // 取主导轴，避免双轴抵消
+    if(Math.abs(u)<6) return;
+    var now=Date.now();
+    if(now-mqLastStep<150) return;
+    mqLastStep=now;
+    mqStep(u<0?-1:1);                            // 向上滚=上一张，向下滚=下一张
   },{passive:false});
   wrap.addEventListener('pointerdown',function(){ pauseAuto(4500); },{passive:true});
   /* 统一指针拖拽（鼠标 / 触屏都能拖着滚） */
